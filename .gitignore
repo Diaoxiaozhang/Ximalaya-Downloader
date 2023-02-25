@@ -133,3 +133,6 @@ test.py
 
 # downloaded files
 download/
+
+# pycharm
+.idea/
