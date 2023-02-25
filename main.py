@@ -6,6 +6,9 @@ import aiofiles
 import asyncio
 import os
 import json
+from Crypto.Cipher import AES
+import base64
+import binascii
 
 
 headers = {
@@ -105,7 +108,7 @@ async def async_get_sound(sound_name, sound_url, album_name, session):
             await f.write(await response.content.read())
 
 
-# 下载选定专辑声音
+# 下载专辑中的选定声音
 async def get_selected_sounds(sounds, album_name, start, end):
     tasks = []
     session = aiohttp.ClientSession()
@@ -117,3 +120,12 @@ async def get_selected_sounds(sounds, album_name, start, end):
         tasks.append(asyncio.create_task(async_get_sound(sound[0], sound[1], album_name, session)))
     await asyncio.wait(tasks)
     await session.close()
+
+
+# 解密vip声音url
+def decrypt_url(ciphertext):
+    key = binascii.unhexlify("aaad3e4fd540b0f79dca95606e72bf93")
+    ciphertext = base64.urlsafe_b64decode(ciphertext + '=' * (4 - len(ciphertext) % 4))
+    cipher = AES.new(key, AES.MODE_ECB)
+    plaintext = cipher.decrypt(ciphertext)
+    return plaintext.decode('utf-8')[:-8]
