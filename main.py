@@ -5,6 +5,7 @@ import aiohttp
 import aiofiles
 import asyncio
 import os
+import json
 
 
 headers = {
@@ -54,6 +55,26 @@ def analyze_album(album_id):
     return album_name, sounds
 
 
+# 协程解析声音
+async def async_analyze_sound(sound_id, session):
+    url = "https://www.ximalaya.com/revision/play/v1/audio"
+    params = {
+        "id": sound_id,
+        "ptype": 1
+    }
+    async with session.get(url, headers=headers, params=params) as response:
+        sound_url = json.loads(await response.text())["data"]["src"]
+    url = "https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/1677297989848"
+    params = {
+        "device": "web",
+        "trackId": sound_id,
+        "trackQualityLevel": 1
+    }
+    async with session.get(url, headers=headers, params=params) as response:
+        sound_name = json.loads(await response.text())["trackInfo"]["title"]
+    return sound_name, sound_url
+
+
 # 将文件名中不能包含的字符替换为空格
 def replace_invalid_chars(name):
     invalid_chars = ['/', '\\', ':,' '*', '?', '"', '<', '>', '|']
@@ -67,6 +88,8 @@ def replace_invalid_chars(name):
 def get_sound(sound_name, sound_url):
     response = requests.get(sound_url, headers=headers)
     sound_file = response.content
+    if not os.path.exists(f"./download"):
+        os.makedirs(f"./download")
     with open(f"./download/{sound_name}.m4a", mode="wb") as f:
         f.write(sound_file)
 
@@ -88,7 +111,9 @@ async def get_selected_sounds(sounds, album_name, start, end):
     session = aiohttp.ClientSession()
     for i in range(start, end + 1):
         sound_id = sounds[i - 1]["trackId"]
-        sound_name, sound_url = analyze_sound(sound_id)
-        tasks.append(asyncio.create_task(async_get_sound(sound_name, sound_url, album_name, session)))
+        tasks.append(asyncio.create_task(async_analyze_sound(sound_id, session)))
+    sounds = await asyncio.gather(*tasks)
+    for sound in sounds:
+        tasks.append(asyncio.create_task(async_get_sound(sound[0], sound[1], album_name, session)))
     await asyncio.wait(tasks)
     await session.close()
