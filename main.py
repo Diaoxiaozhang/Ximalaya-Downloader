@@ -31,6 +31,7 @@ def get_sound(sound_id):
         f.write(sound_file)
 
 
+# 解析专辑
 def analyze_album(album_id):
     url = f"https://www.ximalaya.com/album/{album_id}"
     response = requests.get(url, headers=headers)
