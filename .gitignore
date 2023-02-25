@@ -130,3 +130,6 @@ dmypy.json
 
 # test file
 test.py
+
+# downloaded files
+download/
