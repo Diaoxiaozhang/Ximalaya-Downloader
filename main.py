@@ -15,7 +15,7 @@ from lxml import etree
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
-    "cookie": "_xmLog=h5&5e6ed5db-6ab7-4c49-9830-f69a4f052506&process.env.sdkVersion; fds_otp=6043714892552979561; 1&remember_me=y; 1&_token=74284569&32B85180240N0EA2DDABC8B2D2BEB3B13E80FD6FDC679A50801E0989C966A94E25F6F693C0F9114MCE18290D482A411_; login_type=password_mobile; xm-page-viewid=ximalaya-web; impl=www.ximalaya.com.login; x_xmly_traffic=utm_source%253A%2526utm_medium%253A%2526utm_campaign%253A%2526utm_content%253A%2526utm_term%253A%2526utm_from%253A; Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070=1677297967,1677319931,1677330706,1677376271; Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070=1677376271; web_login=1677376524640"
+    "cookie": "fds_otp=6043714892552979561; 1&remember_me=y; 1&_token=74284569&32B85180240N0EA2DDABC8B2D2BEB3B13E80FD6FDC679A50801E0989C966A94E25F6F693C0F9114MCE18290D482A411_; login_type=password_mobile; _xmLog=h5&5e8610b2-539a-4528-9670-61c2fafbed40&process.env.sdkVersion; xm-page-viewid=ximalaya-web; impl=www.ximalaya.com.login; x_xmly_traffic=utm_source%253A%2526utm_medium%253A%2526utm_campaign%253A%2526utm_content%253A%2526utm_term%253A%2526utm_from%253A; Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070=1677380146,1677407424; web_login=1677408465361; Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070=1677408466"
 }
 
 
@@ -41,18 +41,19 @@ def analyze_sound(sound_id):
 
 # 解析专辑
 def analyze_album(album_id):
-    url = f"https://www.ximalaya.com/album/{album_id}"
-    response = requests.get(url, headers=headers)
-    tree = etree.HTML(response.text)
-    episodes = tree.xpath('//*[@id="anchor_sound_list"]/div[1]/span[1]/span/text()[2]')[0]
-    pages = math.ceil(int(episodes) / 100)
     url = "https://www.ximalaya.com/revision/album/v1/getTracksList"
+    params = {
+        "albumId": album_id,
+        "pageNum": 1,
+        "pageSize": 100
+    }
+    response = requests.get(url, headers=headers, params=params)
+    pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
     sounds = []
     for page in range(1, pages + 1):
         params = {
             "albumId": album_id,
             "pageNum": page,
-            "sort": 0,
             "pageSize": 100
         }
         response = requests.get(url, headers=headers, params=params)
@@ -151,6 +152,7 @@ def get_encrypted_url(sound_id):
 # 协程获取vip声音的加密url
 async def async_get_encrypted_url(sound_id, session):
     url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
+    print(url, sound_id)
     params = {
         "device": "web",
         "trackId": sound_id,
@@ -183,3 +185,23 @@ def judge_sound(sound_id):
         "trackId": sound_id
     }
     response = requests.get(url, headers=headers, params=params)
+
+
+# 下载vip专辑中的选定声音
+async def get_selected_vip_sounds(sounds, album_name, start, end):
+    tasks = []
+    session = aiohttp.ClientSession()
+    for i in range(start, end + 1):
+        sound_id = sounds[i - 1]["trackId"]
+        tasks.append(asyncio.create_task(async_get_encrypted_url(sound_id, session)))
+    encrypted_urls = await asyncio.gather(*tasks)
+    await asyncio.wait(tasks)
+    tasks = []
+    urls = []
+    for encrypted_url in encrypted_urls:
+        urls.append(decrypt_url(encrypted_url))
+    num = 0
+    for url in urls:
+        tasks.append(asyncio.create_task(async_get_sound(sounds[num][0], url, album_name, session)))
+    await asyncio.wait(tasks)
+    await session.close()
