@@ -1,19 +1,22 @@
-import requests
-from lxml import etree
-import math
-import aiohttp
-import aiofiles
 import asyncio
-import os
-import json
-from Crypto.Cipher import AES
 import base64
 import binascii
+import json
+import math
+import os
+import re
+import time
 
+import aiofiles
+import aiohttp
+import requests
+from Crypto.Cipher import AES
+from lxml import etree
 
 headers = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14"
-    }
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+    "cookie": "_xmLog=h5&5e6ed5db-6ab7-4c49-9830-f69a4f052506&process.env.sdkVersion; fds_otp=6043714892552979561; 1&remember_me=y; 1&_token=74284569&32B85180240N0EA2DDABC8B2D2BEB3B13E80FD6FDC679A50801E0989C966A94E25F6F693C0F9114MCE18290D482A411_; login_type=password_mobile; xm-page-viewid=ximalaya-web; impl=www.ximalaya.com.login; x_xmly_traffic=utm_source%253A%2526utm_medium%253A%2526utm_campaign%253A%2526utm_content%253A%2526utm_term%253A%2526utm_from%253A; Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070=1677297967,1677319931,1677330706,1677376271; Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070=1677376271; web_login=1677376524640"
+}
 
 
 # 解析声音
@@ -128,4 +131,55 @@ def decrypt_url(ciphertext):
     ciphertext = base64.urlsafe_b64decode(ciphertext + '=' * (4 - len(ciphertext) % 4))
     cipher = AES.new(key, AES.MODE_ECB)
     plaintext = cipher.decrypt(ciphertext)
-    return plaintext.decode('utf-8')[:-8]
+    plaintext = re.sub(r"[^\x20-\x7E]", "", plaintext.decode("utf-8"))
+    return plaintext
+
+
+# 获取vip声音的加密url
+def get_encrypted_url(sound_id):
+    url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
+    params = {
+        "device": "web",
+        "trackId": sound_id,
+        "trackQualityLevel": 1
+    }
+    response = requests.get(url, headers=headers, params=params)
+    encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
+    return encrypted_url
+
+
+# 协程获取vip声音的加密url
+async def async_get_encrypted_url(sound_id, session):
+    url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
+    params = {
+        "device": "web",
+        "trackId": sound_id,
+        "trackQualityLevel": 1
+    }
+    response = session.get(url, headers=headers, params=params)
+    encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
+    return encrypted_url
+
+
+# 判断专辑是否为vip专辑
+def judge_album(album_id):
+    url = "https://www.ximalaya.com/revision/album/v1/simple"
+    params = {
+        "albumId": album_id
+    }
+    response = requests.get(url, headers=headers, params=params)
+    if response.json()["data"]["albumPageMainInfo"]["isPaid"] == "false":
+        return "free"
+    elif response.json()["data"]["albumPageMainInfo"]["hasBuy"] == "true":
+        return "bought"
+    else:
+        return "not_bought"
+
+
+# 判断声音是否为vip声音
+def judge_sound(sound_id):
+    url = "https://www.ximalaya.com/revision/track/simple"
+    params = {
+        "trackId": sound_id
+    }
+    response = requests.get(url, headers=headers, params=params)
