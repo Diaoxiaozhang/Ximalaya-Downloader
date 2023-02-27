@@ -15,7 +15,7 @@ from lxml import etree
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
-    "cookie": "fds_otp=6043714892552979561; 1&remember_me=y; 1&_token=74284569&32B85180240N0EA2DDABC8B2D2BEB3B13E80FD6FDC679A50801E0989C966A94E25F6F693C0F9114MCE18290D482A411_; login_type=password_mobile; _xmLog=h5&5e8610b2-539a-4528-9670-61c2fafbed40&process.env.sdkVersion; xm-page-viewid=ximalaya-web; impl=www.ximalaya.com.login; x_xmly_traffic=utm_source%253A%2526utm_medium%253A%2526utm_campaign%253A%2526utm_content%253A%2526utm_term%253A%2526utm_from%253A; Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070=1677380146,1677407424; web_login=1677408465361; Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070=1677408466"
+    "cookie": "_xmLog=h5&39bb05fd-53f9-46f7-bca8-0286a1e38e81&process.env.sdkVersion; 1&remember_me=y; 1&_token=74284569&45C8FC80140N009DEAEA78D606B7E4356F2FEBDB4111C828E9611916877F8551FC2552FA19DC114M89C7E9212E10AE0_; impl=www.ximalaya.com.login; x_xmly_traffic=utm_source%253A%2526utm_medium%253A%2526utm_campaign%253A%2526utm_content%253A%2526utm_term%253A%2526utm_from%253A; Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070=1677076702,1677076714,1677077108,1677498168; xm-page-viewid=ximalaya-web; Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070=1677498192; web_login=1677498308037"
 }
 
 
@@ -152,14 +152,13 @@ def get_encrypted_url(sound_id):
 # 协程获取vip声音的加密url
 async def async_get_encrypted_url(sound_id, session):
     url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
-    print(url, sound_id)
     params = {
         "device": "web",
         "trackId": sound_id,
         "trackQualityLevel": 1
     }
-    response = session.get(url, headers=headers, params=params)
-    encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
+    async with session.get(url, headers=headers, params=params) as response:
+        encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
     return encrypted_url
 
 
@@ -202,6 +201,7 @@ async def get_selected_vip_sounds(sounds, album_name, start, end):
         urls.append(decrypt_url(encrypted_url))
     num = 0
     for url in urls:
-        tasks.append(asyncio.create_task(async_get_sound(sounds[num][0], url, album_name, session)))
+        tasks.append(asyncio.create_task(async_get_sound(sounds[num]["title"], url, album_name, session)))
+        num += 1
     await asyncio.wait(tasks)
     await session.close()
