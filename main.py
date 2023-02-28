@@ -11,7 +11,6 @@ import aiofiles
 import aiohttp
 import requests
 from Crypto.Cipher import AES
-from lxml import etree
 
 headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
@@ -93,6 +92,7 @@ def replace_invalid_chars(name):
 
 # 下载单个声音
 def get_sound(sound_name, sound_url):
+    sound_name = replace_invalid_chars(sound_name)
     response = requests.get(sound_url, headers=headers)
     sound_file = response.content
     if not os.path.exists(f"./download"):
@@ -184,6 +184,12 @@ def judge_sound(sound_id):
         "trackId": sound_id
     }
     response = requests.get(url, headers=headers, params=params)
+    if response.json()["trackInfo"]["isPaid"] == "false":
+        return "free"
+    elif response.json()["trackInfo"]["isAuthorized"] == "true":
+        return "true"
+    else:
+        return "not_bought"
 
 
 # 下载vip专辑中的选定声音
