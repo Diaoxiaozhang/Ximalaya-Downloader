@@ -83,7 +83,7 @@ async def async_analyze_sound(sound_id, session):
 
 # 将文件名中不能包含的字符替换为空格
 def replace_invalid_chars(name):
-    invalid_chars = ['/', '\\', ':,' '*', '?', '"', '<', '>', '|']
+    invalid_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
     for char in invalid_chars:
         if char in name:
             name = name.replace(char, " ")
