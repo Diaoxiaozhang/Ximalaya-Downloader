@@ -21,15 +21,18 @@ class Ximalaya:
             "cookie": "_xmLog=h5&39bb05fd-53f9-46f7-bca8-0286a1e38e81&process.env.sdkVersion; 1&remember_me=y; 1&_token=74284569&45C8FC80140N009DEAEA78D606B7E4356F2FEBDB4111C828E9611916877F8551FC2552FA19DC114M89C7E9212E10AE0_; impl=www.ximalaya.com.login; x_xmly_traffic=utm_source%253A%2526utm_medium%253A%2526utm_campaign%253A%2526utm_content%253A%2526utm_term%253A%2526utm_from%253A; Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070=1677076702,1677076714,1677077108,1677498168; xm-page-viewid=ximalaya-web; Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070=1677498192; web_login=1677498308037"
         }
 
-    # 解析声音
+    # 解析声音，如果成功返回声音名和声音链接，否则返回False
     def analyze_sound(self, sound_id):
         url = "https://www.ximalaya.com/revision/play/v1/audio"
         params = {
             "id": sound_id,
             "ptype": 1
         }
-        response = requests.get(
-            url, headers=self.default_headers, params=params)
+        try: 
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except:
+            print(f'ID为{sound_id}的声音解析失败！')
+            return False
         sound_url = response.json()["data"]["src"]
         url = "https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/1677297989848"
         params = {
@@ -37,12 +40,15 @@ class Ximalaya:
             "trackId": sound_id,
             "trackQualityLevel": 1
         }
-        response = requests.get(
-            url, headers=self.default_headers, params=params)
+        try:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except:
+            print(f'ID为{sound_id}的声音解析失败！')
+            return False
         sound_name = response.json()["trackInfo"]["title"]
         return sound_name, sound_url
 
-    # 解析专辑
+    # 解析专辑，如果成功返回专辑名和专辑声音列表，否则返回False
     def analyze_album(self, album_id):
         url = "https://www.ximalaya.com/revision/album/v1/getTracksList"
         params = {
@@ -50,8 +56,11 @@ class Ximalaya:
             "pageNum": 1,
             "pageSize": 100
         }
-        response = requests.get(
-            url, headers=self.default_headers, params=params)
+        try:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except:
+            print(f'ID为{album_id}的专辑解析失败！')
+            return False
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
         for page in range(1, pages + 1):
@@ -60,8 +69,11 @@ class Ximalaya:
                 "pageNum": page,
                 "pageSize": 100
             }
-            response = requests.get(
-                url, headers=self.default_headers, params=params)
+            try:
+                response = requests.get(url, headers=self.default_headers, params=params)
+            except:
+                print(f'ID为{album_id}的专辑解析失败！')
+                return False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
         return album_name, sounds
@@ -102,7 +114,6 @@ class Ximalaya:
             response = requests.get(sound_url, headers=self.default_headers, timeout=10)
         except:
             print(f'{sound_name}下载失败！')
-            return
         sound_file = response.content
         if not os.path.exists(f"./download"):
             os.makedirs(f"./download")
@@ -146,7 +157,7 @@ class Ximalaya:
         plaintext = re.sub(r"[^\x20-\x7E]", "", plaintext.decode("utf-8"))
         return plaintext
 
-    # 获取vip声音的加密url
+    # 获取vip声音的加密url，如果成功返回加密url，否则返回False
     def get_encrypted_url(self, sound_id):
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
@@ -154,8 +165,11 @@ class Ximalaya:
             "trackId": sound_id,
             "trackQualityLevel": 1
         }
-        response = requests.get(
-            url, headers=self.default_headers, params=params)
+        try:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except:
+            print(f'ID为{sound_id}的VIP声音解析失败！')
+            return False
         encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
         return encrypted_url
 
@@ -171,7 +185,7 @@ class Ximalaya:
             encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
         return encrypted_url
 
-    # 判断声音是否为付费声音
+    # 判断声音是否为付费声音，如果是免费声音返回0，如果是已购买的付费声音返回1，如果是未购买的付费声音返回2，如果解析失败返回False
     def judge_sound(self, sound_id):
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
@@ -179,8 +193,11 @@ class Ximalaya:
             "trackId": sound_id,
             "trackQualityLevel": 1
         }
-        response = requests.get(
-            url, headers=self.default_headers, params=params)
+        try:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except:
+            print(f'ID为{sound_id}的声音解析失败！')
+            return False
         if not response.json()["trackInfo"]["isPaid"]:
             return 0  # 免费
         elif response.json()["trackInfo"]["isAuthorized"]:
@@ -188,16 +205,20 @@ class Ximalaya:
         else:
             return 2  # 未购
 
+    # 判断专辑是否为付费专辑，如果是免费专辑返回0，如果是已购买的付费专辑返回1，如果是未购买的付费专辑返回2，如果解析失败返回False
     def judge_album(self, album_id):
         url = "https://www.ximalaya.com/revision/album/v1/simple"
         params = {
             "albumId": album_id
         }
-        response = requests.get(
-            url, headers=self.default_headers, params=params)
+        try:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except:
+            print(f'ID为{album_id}的专辑解析失败！')
+            return False
         if not response.json()["data"]["albumPageMainInfo"]["isPaid"]:
             return 0
-        elif response.json()["data"]["albumPageMainInfo"]:
+        elif response.json()["data"]["albumPageMainInfo"]:  # TODO
             pass
 
     # 下载vip专辑中的选定声音
