@@ -17,8 +17,7 @@ from Crypto.Cipher import AES
 class Ximalaya:
     def __init__(self):
         self.default_headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
-            "cookie": "_xmLog=h5&39bb05fd-53f9-46f7-bca8-0286a1e38e81&process.env.sdkVersion; 1&remember_me=y; 1&_token=74284569&45C8FC80140N009DEAEA78D606B7E4356F2FEBDB4111C828E9611916877F8551FC2552FA19DC114M89C7E9212E10AE0_; impl=www.ximalaya.com.login; x_xmly_traffic=utm_source%253A%2526utm_medium%253A%2526utm_campaign%253A%2526utm_content%253A%2526utm_term%253A%2526utm_from%253A; Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070=1677076702,1677076714,1677077108,1677498168; xm-page-viewid=ximalaya-web; Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070=1677498192; web_login=1677498308037"
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14"
         }
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
@@ -28,8 +27,9 @@ class Ximalaya:
             "id": sound_id,
             "ptype": 1
         }
-        try: 
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        try:
+            response = requests.get(
+                url, headers=self.default_headers, params=params, timeout=5)
         except:
             print(f'ID为{sound_id}的声音解析失败！')
             return False
@@ -41,7 +41,8 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(
+                url, headers=self.default_headers, params=params, timeout=5)
         except:
             print(f'ID为{sound_id}的声音解析失败！')
             return False
@@ -57,7 +58,8 @@ class Ximalaya:
             "pageSize": 100
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(
+                url, headers=self.default_headers, params=params, timeout=5)
         except:
             print(f'ID为{album_id}的专辑解析失败！')
             return False
@@ -70,7 +72,8 @@ class Ximalaya:
                 "pageSize": 100
             }
             try:
-                response = requests.get(url, headers=self.default_headers, params=params)
+                response = requests.get(
+                    url, headers=self.default_headers, params=params)
             except:
                 print(f'ID为{album_id}的专辑解析失败！')
                 return False
@@ -111,7 +114,8 @@ class Ximalaya:
         if os.path.exists(f"./download/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
         try:
-            response = requests.get(sound_url, headers=self.default_headers, timeout=10)
+            response = requests.get(
+                sound_url, headers=self.default_headers, timeout=10)
         except:
             print(f'{sound_name}下载失败！')
         sound_file = response.content
@@ -166,7 +170,8 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(
+                url, headers=self.default_headers, params=params, timeout=5)
         except:
             print(f'ID为{sound_id}的VIP声音解析失败！')
             return False
@@ -194,7 +199,8 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(
+                url, headers=self.default_headers, params=params, timeout=5)
         except:
             print(f'ID为{sound_id}的声音解析失败！')
             return False
@@ -212,7 +218,8 @@ class Ximalaya:
             "albumId": album_id
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(
+                url, headers=self.default_headers, params=params, timeout=5)
         except:
             print(f'ID为{album_id}的专辑解析失败！')
             return False
@@ -242,6 +249,9 @@ class Ximalaya:
             num += 1
         await asyncio.wait(tasks)
         await session.close()
+    
+    def judge_cookie(self, cookie):
+        pass  # TODO 判断cookie是否有效
 
 
 class ConsoleVersion:
@@ -251,6 +261,7 @@ class ConsoleVersion:
 
     def run(self):
         print("欢迎使用喜马拉雅下载器")
+        # TODO 判断是否登录以及cookie是否有效
         while True:
             print("请选择要使用的功能：")
             print("1. 单个声音")
@@ -265,14 +276,12 @@ class ConsoleVersion:
                 except ValueError:
                     sound_id = re.search(
                         r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
-                    sound_type = self.ximalaya.judge_sound(sound_id)
-                    print(sound_type)
-                    if sound_type == 0:
-                        sound_name, sound_url = self.ximalaya.analyze_sound(
-                            sound_id)
-                        print(f"声音名{sound_name}，判断为免费声音，正在开始下载……")
-                        self.ximalaya.get_sound(sound_name, sound_url)
-                        print(f"声音名{sound_name}，下载完成！")
+                sound_type = self.ximalaya.judge_sound(sound_id)
+                if sound_type == 0:
+                    sound_name, sound_url = self.ximalaya.analyze_sound(
+                        sound_id)
+                    print(f"声音名{sound_name}，判断为免费声音，正在开始下载……")
+                    self.ximalaya.get_sound(sound_name, sound_url)
 
             elif choice == "2":
                 print("请输入专辑ID：")
