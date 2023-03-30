@@ -136,3 +136,6 @@ download/
 
 # pycharm
 .idea/
+
+# config file
+config.json
