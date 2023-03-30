@@ -6,7 +6,6 @@ import math
 import os
 import re
 import time
-import logging
 
 import aiofiles
 import aiohttp
@@ -249,9 +248,32 @@ class Ximalaya:
             num += 1
         await asyncio.wait(tasks)
         await session.close()
-    
-    def judge_cookie(self, cookie):
-        pass  # TODO 判断cookie是否有效
+
+    # 判断cookie是否有效
+    def judge_cookie(self):
+        try:
+            with open("config.json", "r") as f:
+                config = json.load(f)
+        except:
+            self.initialize_config()
+        url = "https://www.ximalaya.com/revision/my/getCurrentUserInfo"
+        headers = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+            "cookie": config["cookie"]
+        }
+        response = requests.get(url, headers=headers)
+        if response.json()["ret"] == 200:
+            return True
+        if response.json()["ret"] == 401:
+            return False
+
+    # 初始化配置文件
+    def initialize_config(self):
+        with open("config.json", "w") as f:
+            config = {
+                "cookie": ""
+            }
+            json.dump(config, f)
 
 
 class ConsoleVersion:
@@ -274,8 +296,11 @@ class ConsoleVersion:
                 try:
                     sound_id = int(_)
                 except ValueError:
-                    sound_id = re.search(
-                        r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
+                    try:
+                        sound_id = re.search(r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
+                    except:
+                        print("输入有误，请重新输入！")
+                        continue
                 sound_type = self.ximalaya.judge_sound(sound_id)
                 if sound_type == 0:
                     sound_name, sound_url = self.ximalaya.analyze_sound(
@@ -289,8 +314,11 @@ class ConsoleVersion:
                 try:
                     album_id = int(_)
                 except ValueError:
-                    album_id = re.search(
-                        r"ximalaya.com/album/(?P<album_id>\d+)", _).group('album_id')
+                    try:
+                        album_id = re.search(r"ximalaya.com/album/(?P<album_id>\d+)", _).group('album_id')
+                    except:
+                        print("输入有误，请重新输入！")
+                        continue
                 album_name, sounds = self.ximalaya.analyze_album(album_id)
                 album_type = self.ximalaya.judge_album(album_id)
                 if album_type == 0:
@@ -311,7 +339,3 @@ class ConsoleVersion:
 
             else:
                 print("无效的选择，请重新输入。")
-
-
-if __name__ == '__main__':
-    ConsoleVersion().run()
