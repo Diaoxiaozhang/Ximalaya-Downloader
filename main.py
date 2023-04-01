@@ -11,6 +11,12 @@ import aiofiles
 import aiohttp
 import requests
 from Crypto.Cipher import AES
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import selenium.common.exceptions
 
 
 class Ximalaya:
@@ -249,22 +255,29 @@ class Ximalaya:
         await asyncio.wait(tasks)
         await session.close()
 
-    # 判断cookie是否有效
-    def judge_cookie(self):
+    def get_cookie(self):
         try:
             with open("config.json", "r") as f:
                 config = json.load(f)
         except:
             self.initialize_config()
+        try:
+            cookie = config["cookie"]
+        except KeyError:
+            return False
+        return cookie
+
+    # 判断cookie是否有效
+    def judge_cookie(self, cookie):
         url = "https://www.ximalaya.com/revision/my/getCurrentUserInfo"
         headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
-            "cookie": config["cookie"]
+            "cookie": cookie
         }
         response = requests.get(url, headers=headers)
         if response.json()["ret"] == 200:
             return True
-        if response.json()["ret"] == 401:
+        else:
             return False
 
     # 初始化配置文件
@@ -275,6 +288,46 @@ class Ximalaya:
             }
             json.dump(config, f)
 
+    def login(self):
+        print("请输入登录方式：")
+        print("1. 在浏览器中登录并自动提取cookie")
+        print("2. 手动输入cookie")
+        choice = input()
+        if choice == "1":
+            print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功后请关闭浏览器")
+            option = webdriver.ChromeOptions()
+            option.add_experimental_option("detach", True)
+            driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
+            driver.get("https://passport.ximalaya.com/page/web/login")
+            try:
+                WebDriverWait(driver, 300).until(EC.url_to_be("https://www.ximalaya.com/"))
+                cookie = driver.get_cookies()
+                driver.quit()
+            except selenium.common.exceptions.TimeoutException:
+                print("登录超时，自动返回主菜单！")
+                driver.quit()
+                return
+            token = [d['value'] for d in cookie if d['name'] == '1&_token'][0]
+            with open("config.json", "r") as f:
+                config = json.load(f)
+            config["cookie"] = f"1&_token={token}"
+            with open("config.json", "w") as f:
+                json.dump(config, f)
+        if choice == "2":
+            print("请输入cookie：（获取方法详见README）")
+            cookie = input()
+            with open("config.json", "r") as f:
+                config = json.load(f)
+            config["cookie"] = cookie
+            isCookieAvailable = self.judge_cookie(cookie)
+            if isCookieAvailable:
+                with open("config.json", "w") as f:
+                    json.dump(config, f)
+                print("cookie设置成功！")
+            else:
+                print("cookie无效，将返回主菜单，建议使用方法1自动获取cookie！")
+                return
+
 
 class ConsoleVersion:
     def __init__(self):
@@ -283,7 +336,19 @@ class ConsoleVersion:
 
     def run(self):
         print("欢迎使用喜马拉雅下载器")
-        # TODO 判断是否登录以及cookie是否有效
+        isLogined = self.ximalaya.judge_cookie(self.ximalaya.get_cookie())
+        if not isLogined:
+            print("未检测到有效喜马拉雅登录信息，请选择是否要登录：")
+            print("1. 登录")
+            print("2. 不登录")
+            choice = input()
+            if choice == "1":
+                self.ximalaya.login()
+            elif choice == "2":
+                pass
+            else:
+                print("输入有误，将返回主菜单！")
+                return
         while True:
             print("请选择要使用的功能：")
             print("1. 单个声音")
