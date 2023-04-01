@@ -38,7 +38,10 @@ class Ximalaya:
         except:
             print(f'ID为{sound_id}的声音解析失败！')
             return False
-        sound_url = response.json()["data"]["src"]
+        try:
+            sound_url = response.json()["data"]["src"]
+        except:
+            sound_url = None
         url = "https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/1677297989848"
         params = {
             "device": "web",
@@ -95,7 +98,7 @@ class Ximalaya:
         }
         async with session.get(url, headers=self.default_headers, params=params) as response:
             sound_url = json.loads(await response.text())["data"]["src"]
-        url = "https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/1677297989848"
+        url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
             "trackId": sound_id,
@@ -119,17 +122,15 @@ class Ximalaya:
         if os.path.exists(f"./download/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
         try:
-            response = requests.get(
-                sound_url, headers=self.default_headers, timeout=10)
+            response = requests.get(sound_url, headers=self.default_headers, timeout=10)
         except:
             print(f'{sound_name}下载失败！')
         sound_file = response.content
         if not os.path.exists(f"./download"):
             os.makedirs(f"./download")
-        else:
-            with open(f"./download/{sound_name}.m4a", mode="wb") as f:
-                f.write(sound_file)
-            print(f'{sound_name}下载完成！')
+        with open(f"./download/{sound_name}.m4a", mode="wb") as f:
+            f.write(sound_file)
+        print(f'{sound_name}下载完成！')
 
     # 协程下载声音
     async def async_get_sound(self, sound_name, sound_url, album_name, session):
@@ -167,7 +168,7 @@ class Ximalaya:
         return plaintext
 
     # 获取vip声音的加密url，如果成功返回加密url，否则返回False
-    def get_encrypted_url(self, sound_id):
+    def get_encrypted_url(self, sound_id, headers):
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -176,7 +177,7 @@ class Ximalaya:
         }
         try:
             response = requests.get(
-                url, headers=self.default_headers, params=params, timeout=5)
+                url, headers=headers, params=params, timeout=5)
         except:
             print(f'ID为{sound_id}的VIP声音解析失败！')
             return False
@@ -184,19 +185,19 @@ class Ximalaya:
         return encrypted_url
 
     # 协程获取vip声音的加密url
-    async def async_get_encrypted_url(self, sound_id, session):
+    async def async_get_encrypted_url(self, sound_id, session, headers):
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
             "trackId": sound_id,
             "trackQualityLevel": 1
         }
-        async with session.get(url, headers=self.default_headers, params=params) as response:
+        async with session.get(url, headers=headers, params=params) as response:
             encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
         return encrypted_url
 
     # 判断声音是否为付费声音，如果是免费声音返回0，如果是已购买的付费声音返回1，如果是未购买的付费声音返回2，如果解析失败返回False
-    def judge_sound(self, sound_id):
+    def judge_sound(self, sound_id, headers):
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -205,7 +206,7 @@ class Ximalaya:
         }
         try:
             response = requests.get(
-                url, headers=self.default_headers, params=params, timeout=5)
+                url, headers=headers, params=params, timeout=5)
         except:
             print(f'ID为{sound_id}的声音解析失败！')
             return False
@@ -232,6 +233,11 @@ class Ximalaya:
             return 0
         elif response.json()["data"]["albumPageMainInfo"]:  # TODO
             pass
+
+    def get_vip_sound(self, sound_name, sound_id, headers):
+        encrypted_url = self.get_encrypted_url(sound_id, headers)
+        sound_url = self.decrypt_url(encrypted_url)
+        self.get_sound(sound_name, sound_url)
 
     # 下载vip专辑中的选定声音
     async def get_selected_vip_sounds(self, sounds, album_name, start, end):
@@ -263,7 +269,7 @@ class Ximalaya:
             self.initialize_config()
         try:
             cookie = config["cookie"]
-        except KeyError:
+        except:
             return False
         return cookie
 
@@ -276,7 +282,7 @@ class Ximalaya:
         }
         response = requests.get(url, headers=headers)
         if response.json()["ret"] == 200:
-            return True
+            return response.json()["data"]["userName"]
         else:
             return False
 
@@ -301,16 +307,18 @@ class Ximalaya:
             driver.get("https://passport.ximalaya.com/page/web/login")
             try:
                 WebDriverWait(driver, 300).until(EC.url_to_be("https://www.ximalaya.com/"))
-                cookie = driver.get_cookies()
+                cookies = driver.get_cookies()
                 driver.quit()
             except selenium.common.exceptions.TimeoutException:
                 print("登录超时，自动返回主菜单！")
                 driver.quit()
                 return
-            token = [d['value'] for d in cookie if d['name'] == '1&_token'][0]
+            cookie = ""
+            for cookie_ in cookies:
+                cookie += f"{cookie_['name']}={cookie_['value']}; "
             with open("config.json", "r") as f:
                 config = json.load(f)
-            config["cookie"] = f"1&_token={token}"
+            config["cookie"] = cookie
             with open("config.json", "w") as f:
                 json.dump(config, f)
         if choice == "2":
@@ -336,8 +344,8 @@ class ConsoleVersion:
 
     def run(self):
         print("欢迎使用喜马拉雅下载器")
-        isLogined = self.ximalaya.judge_cookie(self.ximalaya.get_cookie())
-        if not isLogined:
+        username = self.ximalaya.judge_cookie(self.ximalaya.get_cookie())
+        if not username:
             print("未检测到有效喜马拉雅登录信息，请选择是否要登录：")
             print("1. 登录")
             print("2. 不登录")
@@ -349,6 +357,12 @@ class ConsoleVersion:
             else:
                 print("输入有误，将返回主菜单！")
                 return
+        else:
+            print(f"已检测到有效登录信息，当前登录用户为{username}，如需切换账号请删除config.json文件然后重新启动本程序！")
+        headers = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+            "cookie": self.ximalaya.get_cookie()
+        }
         while True:
             print("请选择要使用的功能：")
             print("1. 单个声音")
@@ -366,13 +380,17 @@ class ConsoleVersion:
                     except:
                         print("输入有误，请重新输入！")
                         continue
-                sound_type = self.ximalaya.judge_sound(sound_id)
+                sound_type = self.ximalaya.judge_sound(sound_id, headers)
                 if sound_type == 0:
-                    sound_name, sound_url = self.ximalaya.analyze_sound(
-                        sound_id)
+                    sound_name, sound_url = self.ximalaya.analyze_sound(sound_id)
                     print(f"声音名{sound_name}，判断为免费声音，正在开始下载……")
                     self.ximalaya.get_sound(sound_name, sound_url)
-
+                elif sound_type == 1:
+                    sound_name, _ = self.ximalaya.analyze_sound(sound_id)
+                    print(f"声音名{sound_name}，判断为已购付费声音或vip免费声音，正在开始下载……")
+                    self.ximalaya.get_vip_sound(sound_name, sound_id, headers)
+                else:
+                    print(f"声音名{sound_name}，判断为付费声音，请登录已购买该声音的账号后再尝试下载！")
             elif choice == "2":
                 print("请输入专辑ID：")
                 _ = input()
@@ -395,8 +413,7 @@ class ConsoleVersion:
                     print("3. 显示专辑内声音列表")
                     choice = input()
                     if choice == "1":
-                        self.loop.run_until_complete(self.ximalaya.get_selected_sounds(
-                            sounds, album_name, 1, len(sounds)))
+                        self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds)))
                         print("专辑全部声音下载完成！")
 
             elif choice == "3":
