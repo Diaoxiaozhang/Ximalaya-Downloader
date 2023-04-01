@@ -13,11 +13,13 @@ import requests
 from Crypto.Cipher import AES
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import selenium.common.exceptions
+import colorama
 
+
+colorama.init(autoreset=True)
 
 class Ximalaya:
     def __init__(self):
@@ -36,7 +38,7 @@ class Ximalaya:
             response = requests.get(
                 url, headers=self.default_headers, params=params, timeout=5)
         except:
-            print(f'ID为{sound_id}的声音解析失败！')
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             return False
         try:
             sound_url = response.json()["data"]["src"]
@@ -52,9 +54,13 @@ class Ximalaya:
             response = requests.get(
                 url, headers=self.default_headers, params=params, timeout=5)
         except:
-            print(f'ID为{sound_id}的声音解析失败！')
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             return False
-        sound_name = response.json()["trackInfo"]["title"]
+        try:
+            sound_name = response.json()["trackInfo"]["title"]
+        except KeyError:
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            return False
         return sound_name, sound_url
 
     # 解析专辑，如果成功返回专辑名和专辑声音列表，否则返回False
@@ -69,7 +75,7 @@ class Ximalaya:
             response = requests.get(
                 url, headers=self.default_headers, params=params, timeout=5)
         except:
-            print(f'ID为{album_id}的专辑解析失败！')
+            print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
             return False
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
@@ -83,7 +89,7 @@ class Ximalaya:
                 response = requests.get(
                     url, headers=self.default_headers, params=params)
             except:
-                print(f'ID为{album_id}的专辑解析失败！')
+                print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
                 return False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
@@ -124,7 +130,7 @@ class Ximalaya:
         try:
             response = requests.get(sound_url, headers=self.default_headers, timeout=10)
         except:
-            print(f'{sound_name}下载失败！')
+            print(colorama.Fore.RED + f'{sound_name}下载失败！')
         sound_file = response.content
         if not os.path.exists(f"./download"):
             os.makedirs(f"./download")
@@ -138,9 +144,15 @@ class Ximalaya:
         album_name = self.replace_invalid_chars(album_name)
         if not os.path.exists(f"./download/{album_name}"):
             os.makedirs(f"./download/{album_name}")
-        async with session.get(sound_url, headers=self.default_headers) as response:
-            async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
-                await f.write(await response.content.read())
+        if os.path.exists(f"./download/{sound_name}.m4a"):
+            print(f'{sound_name}已存在！')
+        try:
+            async with session.get(sound_url, headers=self.default_headers, timeout=30) as response:
+                async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
+                    await f.write(await response.content.read())
+            print(f'{sound_name}下载完成！')
+        except:
+            print(colorama.Fore.RED + f'{sound_name}下载失败！')
 
     # 下载专辑中的选定声音
     async def get_selected_sounds(self, sounds, album_name, start, end):
@@ -179,7 +191,7 @@ class Ximalaya:
             response = requests.get(
                 url, headers=headers, params=params, timeout=5)
         except:
-            print(f'ID为{sound_id}的VIP声音解析失败！')
+            print(colorama.Fore.RED + f'ID为{sound_id}的VIP声音解析失败！')
             return False
         encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
         return encrypted_url
@@ -205,14 +217,18 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(
-                url, headers=headers, params=params, timeout=5)
+            response = requests.get(url, headers=headers, params=params, timeout=5)
         except:
-            print(f'ID为{sound_id}的声音解析失败！')
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             return False
-        if not response.json()["trackInfo"]["isPaid"]:
+        try:
+            trackInfo = response.json()["trackInfo"]
+        except KeyError:
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            return False
+        if not trackInfo["isPaid"]:
             return 0  # 免费
-        elif response.json()["trackInfo"]["isAuthorized"]:
+        elif trackInfo["isAuthorized"]:
             return 1  # 已购
         else:
             return 2  # 未购
@@ -227,7 +243,7 @@ class Ximalaya:
             response = requests.get(
                 url, headers=self.default_headers, params=params, timeout=5)
         except:
-            print(f'ID为{album_id}的专辑解析失败！')
+            print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
             return False
         if not response.json()["data"]["albumPageMainInfo"]["isPaid"]:
             return 0
@@ -381,6 +397,8 @@ class ConsoleVersion:
                         print("输入有误，请重新输入！")
                         continue
                 sound_type = self.ximalaya.judge_sound(sound_id, headers)
+                if sound_type == False:
+                    continue
                 if sound_type == 0:
                     sound_name, sound_url = self.ximalaya.analyze_sound(sound_id)
                     print(f"声音名{sound_name}，判断为免费声音，正在开始下载……")
