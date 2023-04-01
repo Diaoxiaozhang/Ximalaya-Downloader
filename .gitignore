@@ -139,3 +139,6 @@ download/
 
 # config file
 config.json
+
+# pylint
+pylint.conf
