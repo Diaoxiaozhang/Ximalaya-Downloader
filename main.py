@@ -139,8 +139,12 @@ class Ximalaya:
         print(f'{sound_name}下载完成！')
 
     # 协程下载声音
-    async def async_get_sound(self, sound_name, sound_url, album_name, session):
-        sound_name = self.replace_invalid_chars(sound_name)
+    async def async_get_sound(self, sound_name, sound_url, album_name, session, num=None):
+        if num is None:
+            sound_name = self.replace_invalid_chars(sound_name)
+        else:
+            sound_name = f"{num} {sound_name}"
+            sound_name = self.replace_invalid_chars(sound_name)
         album_name = self.replace_invalid_chars(album_name)
         if not os.path.exists(f"./download/{album_name}"):
             os.makedirs(f"./download/{album_name}")
@@ -155,7 +159,7 @@ class Ximalaya:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
 
     # 下载专辑中的选定声音
-    async def get_selected_sounds(self, sounds, album_name, start, end):
+    async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
         tasks = []
         session = aiohttp.ClientSession()
         for i in range(start, end + 1):
@@ -163,17 +167,21 @@ class Ximalaya:
             tasks.append(asyncio.create_task(
                 self.async_analyze_sound(sound_id, session)))
         sounds = await asyncio.gather(*tasks)
+        digits = len(str(len(sounds)))
+        if number:
+            for sound in sounds:
+                num = str(sounds.index(sound) + 1).zfill(digits)
+                sound.append(num)
         for sound in sounds:
-            tasks.append(asyncio.create_task(self.async_get_sound(
-                sound[0], sound[1], album_name, session)))
+            tasks.append(asyncio.create_task(self.async_get_sound(sound[0], sound[1], album_name, session, num)))
+            print(sound)
         await asyncio.wait(tasks)
         await session.close()
 
     # 解密vip声音url
     def decrypt_url(self, ciphertext):
         key = binascii.unhexlify("aaad3e4fd540b0f79dca95606e72bf93")
-        ciphertext = base64.urlsafe_b64decode(
-            ciphertext + '=' * (4 - len(ciphertext) % 4))
+        ciphertext = base64.urlsafe_b64decode(ciphertext + '=' * (4 - len(ciphertext) % 4))
         cipher = AES.new(key, AES.MODE_ECB)
         plaintext = cipher.decrypt(ciphertext)
         plaintext = re.sub(r"[^\x20-\x7E]", "", plaintext.decode("utf-8"))
@@ -222,13 +230,13 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             return False
         try:
-            trackInfo = response.json()["trackInfo"]
+            track_info = response.json()["trackInfo"]
         except KeyError:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             return False
-        if not trackInfo["isPaid"]:
+        if not track_info["isPaid"]:
             return 0  # 免费
-        elif trackInfo["isAuthorized"]:
+        elif track_info["isAuthorized"]:
             return 1  # 已购
         else:
             return 2  # 未购
@@ -343,8 +351,8 @@ class Ximalaya:
             with open("config.json", "r") as f:
                 config = json.load(f)
             config["cookie"] = cookie
-            isCookieAvailable = self.judge_cookie(cookie)
-            if isCookieAvailable:
+            is_cookie_available = self.judge_cookie(cookie)
+            if is_cookie_available:
                 with open("config.json", "w") as f:
                     json.dump(config, f)
                 print("cookie设置成功！")
@@ -397,7 +405,7 @@ class ConsoleVersion:
                         print("输入有误，请重新输入！")
                         continue
                 sound_type = self.ximalaya.judge_sound(sound_id, headers)
-                if sound_type == False:
+                if not sound_type:
                     continue
                 if sound_type == 0:
                     sound_name, sound_url = self.ximalaya.analyze_sound(sound_id)
