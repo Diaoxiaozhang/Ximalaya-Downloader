@@ -143,7 +143,7 @@ class Ximalaya:
         if num is None:
             sound_name = self.replace_invalid_chars(sound_name)
         else:
-            sound_name = f"{num} {sound_name}"
+            sound_name = f"{num}-{sound_name}"
             sound_name = self.replace_invalid_chars(sound_name)
         album_name = self.replace_invalid_chars(album_name)
         if not os.path.exists(f"./download/{album_name}"):
@@ -162,19 +162,20 @@ class Ximalaya:
     async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
         tasks = []
         session = aiohttp.ClientSession()
-        for i in range(start, end + 1):
-            sound_id = sounds[i - 1]["trackId"]
-            tasks.append(asyncio.create_task(
-                self.async_analyze_sound(sound_id, session)))
+        for i in range(start - 1, end):
+            sound_id = sounds[i]["trackId"]
+            tasks.append(asyncio.create_task(self.async_analyze_sound(sound_id, session)))
         sounds = await asyncio.gather(*tasks)
         digits = len(str(len(sounds)))
         if number:
+            num = start
             for sound in sounds:
-                num = str(sounds.index(sound) + 1).zfill(digits)
-                sound.append(num)
-        for sound in sounds:
-            tasks.append(asyncio.create_task(self.async_get_sound(sound[0], sound[1], album_name, session, num)))
-            print(sound)
+                num_ = str(num).zfill(digits)
+                tasks.append(asyncio.create_task(self.async_get_sound(sound[0], sound[1], album_name, session, num_)))
+                num += 1
+        else:
+            for sound in sounds:
+                tasks.append(asyncio.create_task(self.async_get_sound(sound[0], sound[1], album_name, session)))
         await asyncio.wait(tasks)
         await session.close()
 
