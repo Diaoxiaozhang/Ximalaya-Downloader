@@ -18,8 +18,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import selenium.common.exceptions
 import colorama
 
-
 colorama.init(autoreset=True)
+
 
 class Ximalaya:
     def __init__(self):
@@ -259,33 +259,43 @@ class Ximalaya:
         elif response.json()["data"]["albumPageMainInfo"]:  # TODO
             pass
 
+    # 下载单个vip声音
     def get_vip_sound(self, sound_name, sound_id, headers):
         encrypted_url = self.get_encrypted_url(sound_id, headers)
         sound_url = self.decrypt_url(encrypted_url)
         self.get_sound(sound_name, sound_url)
 
     # 下载vip专辑中的选定声音
-    async def get_selected_vip_sounds(self, sounds, album_name, start, end):
+    async def get_selected_vip_sounds(self, sounds, album_name, start, end, headers, number=True):
         tasks = []
         session = aiohttp.ClientSession()
         for i in range(start, end + 1):
             sound_id = sounds[i - 1]["trackId"]
-            tasks.append(asyncio.create_task(
-                self.async_get_encrypted_url(sound_id, session)))
+            tasks.append(asyncio.create_task(self.async_get_encrypted_url(sound_id, session, headers)))
         encrypted_urls = await asyncio.gather(*tasks)
         await asyncio.wait(tasks)
         tasks = []
         urls = []
         for encrypted_url in encrypted_urls:
             urls.append(self.decrypt_url(encrypted_url))
-        num = 0
-        for url in urls:
-            tasks.append(asyncio.create_task(self.async_get_sound(
-                sounds[num]["title"], url, album_name, session)))
-            num += 1
+        if number:
+            digits = len(str(len(sounds)))
+            file_num = start
+            num = 0
+            for url in urls:
+                file_num_ = str(file_num).zfill(digits)
+                tasks.append(asyncio.create_task(self.async_get_sound(sounds[num]["title"], url, album_name, session, file_num_)))
+                num += 1
+                file_num_ += 1
+        else:
+            num = 0
+            for url in urls:
+                tasks.append(asyncio.create_task(self.async_get_sound(sounds[num]["title"], url, album_name, session)))
+                num += 1
         await asyncio.wait(tasks)
         await session.close()
 
+    # 获取配置文件中的cookie
     def get_cookie(self):
         try:
             with open("config.json", "r") as f:
@@ -319,6 +329,7 @@ class Ximalaya:
             }
             json.dump(config, f)
 
+    # 登录喜马拉雅账号
     def login(self):
         print("请输入登录方式：")
         print("1. 在浏览器中登录并自动提取cookie")
