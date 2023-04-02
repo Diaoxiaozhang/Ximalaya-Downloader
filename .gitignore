@@ -142,3 +142,6 @@ config.json
 
 # pylint
 pylint.conf
+
+# initialize
+initialize.sh
