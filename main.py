@@ -249,11 +249,11 @@ class Ximalaya:
             "albumId": album_id
         }
         try:
-            response = requests.get(
-                url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
         except:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
             return False
+        print(response.json())
         if not response.json()["data"]["albumPageMainInfo"]["isPaid"]:
             return 0
         elif response.json()["data"]["albumPageMainInfo"]:  # TODO
@@ -380,7 +380,11 @@ class ConsoleVersion:
 
     def run(self):
         print("欢迎使用喜马拉雅下载器")
-        username = self.ximalaya.judge_cookie(self.ximalaya.get_cookie())
+        cookie = self.ximalaya.get_cookie()
+        if not cookie:
+            username = False
+        else:
+            username = self.ximalaya.judge_cookie(cookie)
         if not username:
             print("未检测到有效喜马拉雅登录信息，请选择是否要登录：")
             print("1. 登录")
