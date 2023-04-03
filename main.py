@@ -287,7 +287,7 @@ class Ximalaya:
                 file_num_ = str(file_num).zfill(digits)
                 tasks.append(asyncio.create_task(self.async_get_sound(sounds[num]["title"], url, album_name, session, file_num_)))
                 num += 1
-                file_num_ += 1
+                file_num += 1
         else:
             num = 0
             for url in urls:
