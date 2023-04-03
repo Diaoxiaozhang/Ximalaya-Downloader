@@ -1,0 +1,7 @@
+aiofiles
+aiohttp
+colorama
+pycryptodome
+requests
+selenium
+webdriver_manager
