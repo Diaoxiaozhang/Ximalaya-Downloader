@@ -243,21 +243,23 @@ class Ximalaya:
             return 2  # 未购
 
     # 判断专辑是否为付费专辑，如果是免费专辑返回0，如果是已购买的付费专辑返回1，如果是未购买的付费专辑返回2，如果解析失败返回False
-    def judge_album(self, album_id):
+    def judge_album(self, album_id, headers):
         url = "https://www.ximalaya.com/revision/album/v1/simple"
         params = {
             "albumId": album_id
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(url, headers=headers, params=params, timeout=5)
         except:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
             return False
         print(response.json())
         if not response.json()["data"]["albumPageMainInfo"]["isPaid"]:
-            return 0
-        elif response.json()["data"]["albumPageMainInfo"]:  # TODO
-            pass
+            return 0  # 免费专辑
+        elif response.json()["data"]["albumPageMainInfo"]["hasBuy"]:
+            return 1  # 已购专辑
+        else:
+            return 2  # 未购专辑
 
     # 下载单个vip声音
     def get_vip_sound(self, sound_name, sound_id, headers):
@@ -393,16 +395,16 @@ class ConsoleVersion:
             if choice == "1":
                 self.ximalaya.login()
             elif choice == "2":
-                pass
+                headers = self.ximalaya.default_headers
             else:
                 print("输入有误，将返回主菜单！")
                 return
         else:
             print(f"已检测到有效登录信息，当前登录用户为{username}，如需切换账号请删除config.json文件然后重新启动本程序！")
-        headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
-            "cookie": self.ximalaya.get_cookie()
-        }
+            headers = {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+                "cookie": self.ximalaya.get_cookie()
+            }
         while True:
             print("请选择要使用的功能：")
             print("1. 单个声音")
