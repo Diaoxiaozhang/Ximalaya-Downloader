@@ -111,7 +111,7 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         async with session.get(url, headers=self.default_headers, params=params) as response:
-            sound_name = json.loads(await response.text())["trackInfo"]["title"]
+            print(await response.text())
         return sound_name, sound_url
 
     # 将文件名中不能包含的字符替换为空格
@@ -442,7 +442,7 @@ class ConsoleVersion:
                 else:
                     print(f"声音名{sound_name}，判断为付费声音，请登录已购买该声音的账号后再尝试下载！")
             elif choice == "2":
-                print("请输入专辑ID：")
+                print("请输入专辑ID或链接：")
                 _ = input()
                 try:
                     album_id = int(_)
@@ -509,8 +509,12 @@ class ConsoleVersion:
                             self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, start, end, headers))
                             print("专辑选定声音下载完成！")
                             break
+                    elif choice == "3":
+                        for sound in sounds:
+                            print(f"{sound['index']}. {sound['title']}")
+                    else:
+                        print("无效的选择，请重新输入。")
             elif choice == "3":
                 break
-
             else:
                 print("无效的选择，请重新输入。")
