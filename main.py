@@ -111,7 +111,7 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         async with session.get(url, headers=self.default_headers, params=params) as response:
-            print(await response.text())
+            sound_name = json.loads(await response.text())["trackInfo"]["title"]
         return sound_name, sound_url
 
     # 将文件名中不能包含的字符替换为空格
