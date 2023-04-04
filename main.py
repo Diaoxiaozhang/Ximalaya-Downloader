@@ -340,6 +340,7 @@ class Ximalaya:
             print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功后请关闭浏览器")
             option = webdriver.ChromeOptions()
             option.add_experimental_option("detach", True)
+            # option.add_experimental_option('excludeSwitches', ['enable-logging'])
             driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
             driver.get("https://passport.ximalaya.com/page/web/login")
             try:
@@ -372,6 +373,8 @@ class Ximalaya:
             else:
                 print("cookie无效，将返回主菜单，建议使用方法1自动获取cookie！")
                 return
+        username = self.judge_cookie(cookie)
+        print(f"成功登录账号{username}！")
 
 
 class ConsoleVersion:
@@ -413,8 +416,8 @@ class ConsoleVersion:
             logined = True
         while True:
             print("请选择要使用的功能：")
-            print("1. 单个声音")
-            print("2. 专辑声音")
+            print("1. 下载单个声音")
+            print("2. 下载专辑声音")
             print("3. 退出程序")
             choice = input()
             if choice == "1":
@@ -429,7 +432,7 @@ class ConsoleVersion:
                         print("输入有误，请重新输入！")
                         continue
                 sound_type = self.ximalaya.judge_sound(sound_id, headers)
-                if not sound_type:
+                if sound_type is False:
                     continue
                 if sound_type == 0:
                     sound_name, sound_url = self.ximalaya.analyze_sound(sound_id)
@@ -459,11 +462,11 @@ class ConsoleVersion:
                 elif album_type == 1:
                     print(f"成功解析已购付费专辑{album_id}，专辑名{album_name}，共{len(sounds)}个声音")
                 elif album_type == 2:
-                    if logined == True:
+                    if logined is True:
                         print(f"成功解析付费专辑{album_id}，专辑名{album_name}，但是当前登陆账号未购买此专辑或未开通vip，请登录可以下载此专辑的账号后再尝试下载")
                     else:
                         print(f"成功解析付费专辑{album_id}，专辑名{album_name}，但是当前未登陆账号，请登录可以下载此专辑的账号后再尝试下载")
-                    break
+                    continue
                 else:
                     break
                 while True:
