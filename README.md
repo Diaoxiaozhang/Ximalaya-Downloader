@@ -6,6 +6,8 @@
 [![stars](https://img.shields.io/github/stars/Diaoxiaozhang/Ximalaya-Downloader.svg?style=flat&color=green)](https://github.com/Diaoxiaozhang/Ximalaya-Downloader)
 [![fork](https://img.shields.io/github/forks/Diaoxiaozhang/Ximalaya-Downloader.svg?style=flat&color=critical)](https://github.com/Diaoxiaozhang/Ximalaya-Downloader)
 [![release](https://img.shields.io/github/release/Diaoxiaozhang/Ximalaya-Downloader.svg?style=flat&color=blue)](https://github.com/Diaoxiaozhang/Ximalaya-Downloader)
+[![downloads](https://img.shields.io/github/downloads/Diaoxiaozhang/Ximalaya-Downloader/total?color=orange)](https://github.com/Diaoxiaozhang/Ximalaya-Downloader)
+
 
 </div>
 
