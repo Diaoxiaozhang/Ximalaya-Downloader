@@ -340,7 +340,7 @@ class Ximalaya:
             print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功后请关闭浏览器")
             option = webdriver.ChromeOptions()
             option.add_experimental_option("detach", True)
-            # option.add_experimental_option('excludeSwitches', ['enable-logging'])
+            option.add_experimental_option('excludeSwitches', ['enable-logging'])
             driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
             driver.get("https://passport.ximalaya.com/page/web/login")
             try:
