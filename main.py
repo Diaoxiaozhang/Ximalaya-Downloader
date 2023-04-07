@@ -317,7 +317,7 @@ class Ximalaya:
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
             "cookie": cookie
         }
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, verify=False)
         if response.json()["ret"] == 200:
             return response.json()["data"]["userName"]
         else:
@@ -354,7 +354,7 @@ class Ximalaya:
                     driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=option)
             else:
                 return
-            print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功后请关闭浏览器")
+            print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功浏览器会自动关闭")
             driver.get("https://passport.ximalaya.com/page/web/login")
             try:
                 WebDriverWait(driver, 300).until(EC.url_to_be("https://www.ximalaya.com/"))
