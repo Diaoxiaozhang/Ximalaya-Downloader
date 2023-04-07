@@ -214,8 +214,11 @@ class Ximalaya:
             "trackId": sound_id,
             "trackQualityLevel": 1
         }
-        async with session.get(url, headers=headers, params=params) as response:
-            encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
+        async with session.get(url, headers=headers, params=params, timeout=30) as response:
+            try:
+                encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
+            except:
+                return False
         return encrypted_url
 
     # 判断声音是否为付费声音，如果是免费声音返回0，如果是已购买的付费声音返回1，如果是未购买的付费声音返回2，如果解析失败返回False
@@ -278,8 +281,16 @@ class Ximalaya:
         await asyncio.wait(tasks)
         tasks = []
         urls = []
+        i = 0
         for encrypted_url in encrypted_urls:
-            urls.append(self.decrypt_url(encrypted_url))
+            if not encrypted_url:
+                print(colorama.Fore.RED + sounds[start + i - 1]["title"] + "下载失败！")
+            else:
+                urls.append(self.decrypt_url(encrypted_url))
+            i += 1
+        if not urls:
+            await session.close()
+            return False
         if number:
             digits = len(str(len(sounds)))
             file_num = start
