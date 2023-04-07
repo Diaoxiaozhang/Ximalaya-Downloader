@@ -12,6 +12,7 @@ import aiohttp
 import requests
 from Crypto.Cipher import AES
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -337,11 +338,23 @@ class Ximalaya:
         print("2. 手动输入cookie")
         choice = input()
         if choice == "1":
+            print("请选择浏览器：")
+            print("1. Google Chrome")
+            print("2. Microsoft Edge")
+            choice = input()
+            if choice == "1":
+                    option = webdriver.ChromeOptions()
+                    option.add_experimental_option("detach", True)
+                    option.add_experimental_option('excludeSwitches', ['enable-logging'])
+                    driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
+            elif choice == "2":
+                    option = webdriver.EdgeOptions()
+                    option.add_experimental_option("detach", True)
+                    option.add_experimental_option('excludeSwitches', ['enable-logging'])
+                    driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=option)
+            else:
+                return
             print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功后请关闭浏览器")
-            option = webdriver.ChromeOptions()
-            option.add_experimental_option("detach", True)
-            option.add_experimental_option('excludeSwitches', ['enable-logging'])
-            driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
             driver.get("https://passport.ximalaya.com/page/web/login")
             try:
                 WebDriverWait(driver, 300).until(EC.url_to_be("https://www.ximalaya.com/"))
