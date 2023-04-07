@@ -317,7 +317,7 @@ class Ximalaya:
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
             "cookie": cookie
         }
-        response = requests.get(url, headers=headers, verify=False)
+        response = requests.get(url, headers=headers)
         if response.json()["ret"] == 200:
             return response.json()["data"]["userName"]
         else:
