@@ -37,6 +37,7 @@ class Ximalaya:
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
     def analyze_sound(self, sound_id):
+        logger.debug(f'开始解析ID为{sound_id}的声音')
         url = "https://www.ximalaya.com/revision/play/v1/audio"
         params = {
             "id": sound_id,
@@ -73,10 +74,12 @@ class Ximalaya:
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug("Exception occurred: %s", e)
             return False
+        logger.debug(f'ID为{sound_id}的声音解析成功！')
         return sound_name, sound_url
 
     # 解析专辑，如果成功返回专辑名和专辑声音列表，否则返回False
     def analyze_album(self, album_id):
+        logger.debug(f'开始解析ID为{album_id}的专辑')
         url = "https://www.ximalaya.com/revision/album/v1/getTracksList"
         params = {
             "albumId": album_id,
@@ -108,10 +111,12 @@ class Ximalaya:
                 return False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
+        logger.debug(f'ID为{album_id}的专辑解析成功')
         return album_name, sounds
 
     # 协程解析声音
     async def async_analyze_sound(self, sound_id, session):
+        logger.debug(f'开始解析ID为{sound_id}的声音')
         url = "https://www.ximalaya.com/revision/play/v1/audio"
         params = {
             "id": sound_id,
@@ -127,6 +132,7 @@ class Ximalaya:
         }
         async with session.get(url, headers=self.default_headers, params=params) as response:
             sound_name = json.loads(await response.text())["trackInfo"]["title"]
+        logger.debug(f'ID为{sound_id}的声音解析成功')
         return sound_name, sound_url
 
     # 将文件名中不能包含的字符替换为空格
@@ -139,6 +145,7 @@ class Ximalaya:
 
     # 下载单个声音
     def get_sound(self, sound_name, sound_url):
+        logger.debug(f'开始下载声音{sound_name}')
         sound_name = self.replace_invalid_chars(sound_name)
         if os.path.exists(f"./download/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
@@ -154,9 +161,11 @@ class Ximalaya:
         with open(f"./download/{sound_name}.m4a", mode="wb") as f:
             f.write(sound_file)
         print(f'{sound_name}下载完成！')
+        logger.debug(f'{sound_name}下载完成！')
 
     # 协程下载声音
     async def async_get_sound(self, sound_name, sound_url, album_name, session, num=None):
+        logger.debug(f'开始下载声音{sound_name}')
         if num is None:
             sound_name = self.replace_invalid_chars(sound_name)
         else:
@@ -172,6 +181,7 @@ class Ximalaya:
                 async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
                     await f.write(await response.content.read())
             print(f'{sound_name}下载完成！')
+            logger.debug(f'{sound_name}下载完成！')
         except Exception as e:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
             logger.debug(f'{sound_name}下载失败！')
@@ -209,6 +219,7 @@ class Ximalaya:
 
     # 获取vip声音的加密url，如果成功返回加密url，否则返回False
     def get_encrypted_url(self, sound_id, headers):
+        logger.debug(f'开始获取ID为{sound_id}的vip声音的加密url')
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -219,15 +230,17 @@ class Ximalaya:
             response = requests.get(
                 url, headers=headers, params=params, timeout=5)
         except Exception as e:
-            print(colorama.Fore.RED + f'ID为{sound_id}的VIP声音解析失败！')
-            logger.debug(f'ID为{sound_id}的VIP声音解析失败！')
+            print(colorama.Fore.RED + f'ID为{sound_id}的vip声音解析失败！')
+            logger.debug(f'ID为{sound_id}的vip声音解析失败！')
             logger.debug('Exception occured: %s', e)
             return False
         encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
+        logger.debug(f'ID为{sound_id}的vip声音获取加密url成功！')
         return encrypted_url
 
     # 协程获取vip声音的加密url
     async def async_get_encrypted_url(self, sound_id, session, headers):
+        logger.debug(f'开始获取ID为{sound_id}的vip声音的加密url')
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -238,13 +251,16 @@ class Ximalaya:
             try:
                 encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
             except Exception as e:
-                logger.debug(f'ID为{sound_id}的vip声音下载失败')
+                print(colorama.Fore.RED + f'ID为{sound_id}的vip声音解析失败！')
+                logger.debug(f'ID为{sound_id}的vip声音解析失败')
                 logger.debug('Exception occured: %s', e)
                 return False
+        logger.debug(f'ID为{sound_id}的vip声音获取加密url成功！')
         return encrypted_url
 
     # 判断声音是否为付费声音，如果是免费声音返回0，如果是已购买的付费声音返回1，如果是未购买的付费声音返回2，如果解析失败返回False
     def judge_sound(self, sound_id, headers):
+        logger.debug(f'开始判断ID为{sound_id}的声音的类型')
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -255,16 +271,17 @@ class Ximalaya:
             response = requests.get(url, headers=headers, params=params, timeout=5)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
-            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音判断类型失败！')
             logger.debug('Exception occured: %s', e)
             return False
         try:
             track_info = response.json()["trackInfo"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
-            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音判断类型失败！')
             logger.debug('Exception occured: %s', e)
             return False
+        logger.debug(f'ID为{sound_id}的声音判断类型成功！')
         if not track_info["isPaid"]:
             return 0  # 免费
         elif track_info["isAuthorized"]:
@@ -274,6 +291,7 @@ class Ximalaya:
 
     # 判断专辑是否为付费专辑，如果是免费专辑返回0，如果是已购买的付费专辑返回1，如果是未购买的付费专辑返回2，如果解析失败返回False
     def judge_album(self, album_id, headers):
+        logger.debug(f'开始判断ID为{album_id}的专辑的类型')
         url = "https://www.ximalaya.com/revision/album/v1/simple"
         params = {
             "albumId": album_id
@@ -282,9 +300,10 @@ class Ximalaya:
             response = requests.get(url, headers=headers, params=params, timeout=5)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
-            logger.debug(f'ID为{album_id}的专辑解析失败！')
+            logger.debug(f'ID为{album_id}的专辑判断类型失败！')
             logger.debug('Exception occured: %s', e)
             return False
+        logger.debug(f'ID为{album_id}的专辑判断类型成功！')
         if not response.json()["data"]["albumPageMainInfo"]["isPaid"]:
             return 0  # 免费专辑
         elif response.json()["data"]["albumPageMainInfo"]["hasBuy"]:
@@ -313,6 +332,7 @@ class Ximalaya:
         for encrypted_url in encrypted_urls:
             if not encrypted_url:
                 print(colorama.Fore.RED + sounds[start + i - 1]["title"] + "下载失败！")
+                logger.debug(sounds[start + i - 1]["title"] + "下载失败！")
             else:
                 urls.append(self.decrypt_url(encrypted_url))
             i += 1
