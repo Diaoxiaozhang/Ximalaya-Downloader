@@ -6,6 +6,7 @@ import math
 import os
 import re
 import time
+import logging
 
 import aiofiles
 import aiohttp
@@ -20,7 +21,13 @@ import selenium.common.exceptions
 import colorama
 
 colorama.init(autoreset=True)
-
+logger = logging.getLogger('logger')
+logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler('app.log', mode='w')
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 class Ximalaya:
     def __init__(self):
@@ -36,10 +43,11 @@ class Ximalaya:
             "ptype": 1
         }
         try:
-            response = requests.get(
-                url, headers=self.default_headers, params=params, timeout=5)
-        except:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug("Exception occurred: %s", e)
             return False
         try:
             sound_url = response.json()["data"]["src"]
@@ -52,15 +60,18 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(
-                url, headers=self.default_headers, params=params, timeout=5)
-        except:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug("Exception occurred: %s", e)
             return False
         try:
             sound_name = response.json()["trackInfo"]["title"]
-        except KeyError:
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug("Exception occurred: %s", e)
             return False
         return sound_name, sound_url
 
@@ -73,10 +84,11 @@ class Ximalaya:
             "pageSize": 100
         }
         try:
-            response = requests.get(
-                url, headers=self.default_headers, params=params, timeout=5)
-        except:
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+            logger.debug(f'ID为{album_id}的专辑解析失败！')
+            logger.debug("Exception occurred: %s", e)
             return False
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
@@ -89,8 +101,10 @@ class Ximalaya:
             try:
                 response = requests.get(
                     url, headers=self.default_headers, params=params)
-            except:
+            except Exception as e:
                 print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+                logger.debug(f'ID为{album_id}的专辑解析失败！')
+                logger.debug('Exception occured: %s', e)
                 return False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
@@ -130,8 +144,9 @@ class Ximalaya:
             print(f'{sound_name}已存在！')
         try:
             response = requests.get(sound_url, headers=self.default_headers, timeout=10)
-        except:
+        except Exception as e:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
+            logger.debug('Exception occured: %s', e)
         sound_file = response.content
         if not os.path.exists(f"./download"):
             os.makedirs(f"./download")
@@ -156,8 +171,9 @@ class Ximalaya:
                 async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
                     await f.write(await response.content.read())
             print(f'{sound_name}下载完成！')
-        except:
+        except Exception as e:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
+            logger.debug('Exception occured: %s', e)
 
     # 下载专辑中的选定声音
     async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
@@ -200,8 +216,9 @@ class Ximalaya:
         try:
             response = requests.get(
                 url, headers=headers, params=params, timeout=5)
-        except:
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的VIP声音解析失败！')
+            logger.debug('Exception occured: %s', e)
             return False
         encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
         return encrypted_url
@@ -217,7 +234,8 @@ class Ximalaya:
         async with session.get(url, headers=headers, params=params, timeout=30) as response:
             try:
                 encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
-            except:
+            except Exception as e:
+                logger.debug('Exception occured: %s', e)
                 return False
         return encrypted_url
 
@@ -231,13 +249,15 @@ class Ximalaya:
         }
         try:
             response = requests.get(url, headers=headers, params=params, timeout=5)
-        except:
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug('Exception occured: %s', e)
             return False
         try:
             track_info = response.json()["trackInfo"]
-        except KeyError:
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug('Exception occured: %s', e)
             return False
         if not track_info["isPaid"]:
             return 0  # 免费
@@ -254,8 +274,9 @@ class Ximalaya:
         }
         try:
             response = requests.get(url, headers=headers, params=params, timeout=5)
-        except:
+        except Exception as e:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+            logger.debug('Exception occured: %s', e)
             return False
         if not response.json()["data"]["albumPageMainInfo"]["isPaid"]:
             return 0  # 免费专辑
