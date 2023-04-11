@@ -419,16 +419,19 @@ class Ximalaya:
             try:
                 WebDriverWait(driver, 300).until(EC.url_to_be("https://www.ximalaya.com/"))
                 cookies = driver.get_cookies()
+                logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
+                for entry in driver.get_log('browser'):
+                    logger.debug(entry['message'])
+                logger.debug('浏览器日志结束')
                 driver.quit()
             except selenium.common.exceptions.TimeoutException:
                 print("登录超时，自动返回主菜单！")
+                logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
+                for entry in driver.get_log('browser'):
+                    logger.debug(entry['message'])
+                logger.debug('浏览器日志结束')
                 driver.quit()
                 return
-            logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
-            for entry in driver.get_log('browser'):
-                logger.debug(entry['level'], entry['message'])
-            logger.debug('浏览器日志结束')
-
             cookie = ""
             for cookie_ in cookies:
                 cookie += f"{cookie_['name']}={cookie_['value']}; "
@@ -437,7 +440,7 @@ class Ximalaya:
             config["cookie"] = cookie
             with open("config.json", "w") as f:
                 json.dump(config, f)
-        if choice == "2":
+        elif choice == "2":
             print("请输入cookie：（获取方法详见README）")
             cookie = input()
             with open("config.json", "r") as f:
