@@ -8,6 +8,7 @@ import re
 import time
 import logging
 import threading
+import traceback
 
 import aiofiles
 import aiohttp
@@ -49,7 +50,7 @@ class Ximalaya:
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
-            logger.debug("Exception occurred: %s", e)
+            logger.debug(traceback.format_exc())
             return False
         try:
             sound_url = response.json()["data"]["src"]
@@ -66,14 +67,14 @@ class Ximalaya:
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
-            logger.debug("Exception occurred: %s", e)
+            logger.debug(traceback.format_exc())
             return False
         try:
             sound_name = response.json()["trackInfo"]["title"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
-            logger.debug("Exception occurred: %s", e)
+            logger.debug(traceback.format_exc())
             return False
         logger.debug(f'ID为{sound_id}的声音解析成功！')
         return sound_name, sound_url
@@ -88,11 +89,11 @@ class Ximalaya:
             "pageSize": 100
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
             logger.debug(f'ID为{album_id}的专辑解析失败！')
-            logger.debug("Exception occurred: %s", e)
+            logger.debug(traceback.format_exc())
             return False
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
@@ -103,12 +104,11 @@ class Ximalaya:
                 "pageSize": 100
             }
             try:
-                response = requests.get(
-                    url, headers=self.default_headers, params=params)
+                response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
             except Exception as e:
                 print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
                 logger.debug(f'ID为{album_id}的专辑解析失败！')
-                logger.debug('Exception occured: %s', e)
+                logger.debug(traceback.format_exc())
                 return False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
@@ -123,16 +123,28 @@ class Ximalaya:
             "id": sound_id,
             "ptype": 1
         }
-        async with session.get(url, headers=self.default_headers, params=params) as response:
-            sound_url = json.loads(await response.text())["data"]["src"]
+        try:
+            async with session.get(url, headers=self.default_headers, params=params, timeout=30) as response:
+                sound_url = json.loads(await response.text())["data"]["src"]
+        except Exception as e:
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug(traceback.format_exc())
+            return False
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
             "trackId": sound_id,
             "trackQualityLevel": 1
         }
-        async with session.get(url, headers=self.default_headers, params=params) as response:
-            sound_name = json.loads(await response.text())["trackInfo"]["title"]
+        try:
+            async with session.get(url, headers=self.default_headers, params=params, tim3out=30) as response:
+                sound_name = json.loads(await response.text())["trackInfo"]["title"]
+        except Exception as e:
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug(traceback.format_exc())
+            return False
         logger.debug(f'ID为{sound_id}的声音解析成功')
         return sound_name, sound_url
 
@@ -151,11 +163,11 @@ class Ximalaya:
         if os.path.exists(f"./download/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
         try:
-            response = requests.get(sound_url, headers=self.default_headers, timeout=10)
+            response = requests.get(sound_url, headers=self.default_headers, timeout=30)
         except Exception as e:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
             logger.debug(f'{sound_name}下载失败！')
-            logger.debug('Exception occured: %s', e)
+            logger.debug(traceback.format_exc())
         sound_file = response.content
         if not os.path.exists(f"./download"):
             os.makedirs(f"./download")
@@ -186,7 +198,7 @@ class Ximalaya:
         except Exception as e:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
             logger.debug(f'{sound_name}下载失败！')
-            logger.debug('Exception occured: %s', e)
+            logger.debug(traceback.format_exc())
 
     # 下载专辑中的选定声音
     async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
@@ -228,14 +240,19 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(
-                url, headers=headers, params=params, timeout=5)
+            response = requests.get(url, headers=headers, params=params, timeout=30)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的vip声音解析失败！')
             logger.debug(f'ID为{sound_id}的vip声音解析失败！')
-            logger.debug('Exception occured: %s', e)
+            logger.debug(traceback.format_exc())
             return False
-        encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
+        try:
+            encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
+        except Exception as e:
+            print(colorama.Fore.RED + f'ID为{sound_id}的vip声音解析失败！')
+            logger.debug(f'ID为{sound_id}的vip声音解析失败！')
+            logger.debug(traceback.format_exc())
+            return False
         logger.debug(f'ID为{sound_id}的vip声音获取加密url成功！')
         return encrypted_url
 
@@ -254,7 +271,7 @@ class Ximalaya:
             except Exception as e:
                 print(colorama.Fore.RED + f'ID为{sound_id}的vip声音解析失败！')
                 logger.debug(f'ID为{sound_id}的vip声音解析失败')
-                logger.debug('Exception occured: %s', e)
+                logger.debug(traceback.format_exc())
                 return False
         logger.debug(f'ID为{sound_id}的vip声音获取加密url成功！')
         return encrypted_url
@@ -269,18 +286,18 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(url, headers=headers, params=params, timeout=5)
+            response = requests.get(url, headers=headers, params=params, timeout=15)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音判断类型失败！')
-            logger.debug('Exception occured: %s', e)
+            logger.debug(traceback.format_exc())
             return False
         try:
             track_info = response.json()["trackInfo"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音判断类型失败！')
-            logger.debug('Exception occured: %s', e)
+            logger.debug(traceback.format_exc())
             return False
         logger.debug(f'ID为{sound_id}的声音判断类型成功！')
         if not track_info["isPaid"]:
@@ -298,11 +315,11 @@ class Ximalaya:
             "albumId": album_id
         }
         try:
-            response = requests.get(url, headers=headers, params=params, timeout=5)
+            response = requests.get(url, headers=headers, params=params, timeout=15)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
             logger.debug(f'ID为{album_id}的专辑判断类型失败！')
-            logger.debug('Exception occured: %s', e)
+            logger.debug(traceback.format_exc())
             return False
         logger.debug(f'ID为{album_id}的专辑判断类型成功！')
         if not response.json()["data"]["albumPageMainInfo"]["isPaid"]:
@@ -377,7 +394,12 @@ class Ximalaya:
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
             "cookie": cookie
         }
-        response = requests.get(url, headers=headers)
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+        except Exception as e:
+            print("无法获取喜马拉雅用户数据，请检查网络状况！")
+            logger.debug("无法获取喜马拉雅用户数据！")
+            logger.debug(traceback.format_exc())
         if response.json()["ret"] == 200:
             return response.json()["data"]["userName"]
         else:
