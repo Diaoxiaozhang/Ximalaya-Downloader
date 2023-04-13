@@ -138,7 +138,7 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            async with session.get(url, headers=self.default_headers, params=params, tim3out=30) as response:
+            async with session.get(url, headers=self.default_headers, params=params, timeout=30) as response:
                 sound_name = json.loads(await response.text())["trackInfo"]["title"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
@@ -204,11 +204,11 @@ class Ximalaya:
     async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
         tasks = []
         session = aiohttp.ClientSession()
+        digits = len(str(len(sounds)))
         for i in range(start - 1, end):
             sound_id = sounds[i]["trackId"]
             tasks.append(asyncio.create_task(self.async_analyze_sound(sound_id, session)))
         sounds = await asyncio.gather(*tasks)
-        digits = len(str(len(sounds)))
         if number:
             num = start
             for sound in sounds:
