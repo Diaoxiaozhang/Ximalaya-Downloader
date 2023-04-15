@@ -190,7 +190,7 @@ class Ximalaya:
         if os.path.exists(f"./download/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
         try:
-            async with session.get(sound_url, headers=self.default_headers, timeout=30) as response:
+            async with session.get(sound_url, headers=self.default_headers, timeout=300) as response:
                 async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
                     await f.write(await response.content.read())
             print(f'{sound_name}下载完成！')
