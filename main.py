@@ -157,16 +157,25 @@ class Ximalaya:
 
     # 下载单个声音
     def get_sound(self, sound_name, sound_url):
-        logger.debug(f'开始下载声音{sound_name}')
+        retries = 3
         sound_name = self.replace_invalid_chars(sound_name)
         if os.path.exists(f"./download/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
-        try:
-            response = requests.get(sound_url, headers=self.default_headers, timeout=30)
-        except Exception as e:
-            print(colorama.Fore.RED + f'{sound_name}下载失败！')
-            logger.debug(f'{sound_name}下载失败！')
+            return
+        while retries > 0:
+            try:
+                logger.debug(f'开始下载声音{sound_name}')
+                response = requests.get(sound_url, headers=self.default_headers, timeout=30)
+                break
+            except Exception as e:
+                print(colorama.Fore.RED + f'{sound_name}下载失败！')
+                logger.debug(f'{sound_name}下载失败！')
+                logger.debug(traceback.format_exc())
+                retries -= 1
+            print(f'{sound_name}经过三次重试后下载失败！')
+            logger.debug(f'{sound_name}经过三次重试后下载失败！')
             logger.debug(traceback.format_exc())
+            return False
         sound_file = response.content
         if not os.path.exists(f"./download"):
             os.makedirs(f"./download")
