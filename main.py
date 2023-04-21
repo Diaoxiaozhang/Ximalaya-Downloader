@@ -168,13 +168,12 @@ class Ximalaya:
                 response = requests.get(sound_url, headers=self.default_headers, timeout=30)
                 break
             except Exception as e:
-                print(colorama.Fore.RED + f'{sound_name}下载失败！')
-                logger.debug(f'{sound_name}下载失败！')
+                logger.debug(f'{sound_name}第{4 - retries}次下载失败！')
                 logger.debug(traceback.format_exc())
                 retries -= 1
-            print(f'{sound_name}经过三次重试后下载失败！')
+        if retries == 0:
+            print(colorama.Fore.RED + f'{sound_name}下载失败！')
             logger.debug(f'{sound_name}经过三次重试后下载失败！')
-            logger.debug(traceback.format_exc())
             return False
         sound_file = response.content
         if not os.path.exists(f"./download"):
@@ -186,6 +185,7 @@ class Ximalaya:
 
     # 协程下载声音
     async def async_get_sound(self, sound_name, sound_url, album_name, session, num=None):
+        retries = 3
         logger.debug(f'开始下载声音{sound_name}')
         if num is None:
             sound_name = self.replace_invalid_chars(sound_name)
@@ -197,16 +197,23 @@ class Ximalaya:
             os.makedirs(f"./download/{album_name}")
         if os.path.exists(f"./download/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
-        try:
-            async with session.get(sound_url, headers=self.default_headers, timeout=300) as response:
-                async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
-                    await f.write(await response.content.read())
-            print(f'{sound_name}下载完成！')
-            logger.debug(f'{sound_name}下载完成！')
-        except Exception as e:
+        while retries > 0:
+            try:
+                async with session.get(sound_url, headers=self.default_headers, timeout=300) as response:
+                    async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
+                        await f.write(await response.content.read())
+                print(f'{sound_name}下载完成！')
+                logger.debug(f'{sound_name}下载完成！')
+                break
+            except Exception as e:
+                print(colorama.Fore.RED + f'{sound_name}下载失败！')
+                logger.debug(f'{sound_name}第{4 - retries}次下载失败！')
+                logger.debug(traceback.format_exc())
+                retries -= 1
+        if retries == 0:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
-            logger.debug(f'{sound_name}下载失败！')
-            logger.debug(traceback.format_exc())
+            logger.debug(f'{sound_name}经过三次重试后下载失败！')
+            return False
 
     # 下载专辑中的选定声音
     async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
