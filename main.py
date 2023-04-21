@@ -201,7 +201,7 @@ class Ximalaya:
         while retries > 0:
             try:
                 async with session.get(sound_url, headers=self.default_headers, timeout=300) as response:
-                    async with aiofiles.open(f".{path}/{album_name}/{sound_name}.m4a", mode="wb") as f:
+                    async with aiofiles.open(f"{path}/{album_name}/{sound_name}.m4a", mode="wb") as f:
                         await f.write(await response.content.read())
                 print(f'{sound_name}下载完成！')
                 logger.debug(f'{sound_name}下载完成！')
@@ -509,6 +509,7 @@ class ConsoleVersion:
         self.loop = asyncio.get_event_loop()
 
     def run(self):
+        global path
         print("欢迎使用喜马拉雅下载器")
         cookie, path = self.ximalaya.analyze_config()
         if not cookie:
@@ -519,6 +520,7 @@ class ConsoleVersion:
             print(f"检测到已设置下载路径为{path}，如果想要修改下载路径，请修改config.json文件中的path字段，将path字段删除或者将值设置为空字符串可恢复默认下载路径")
         else:
             print('在config文件中未检测到有效的下载路径，将使用默认下载路径，如果想要修改下载路径，请修改config.json文件中的path字段为你想要的下载路径')
+            path = './download'
         if not username:
             print("未检测到有效喜马拉雅登录信息，请选择是否要登录：")
             print("1. 登录")
