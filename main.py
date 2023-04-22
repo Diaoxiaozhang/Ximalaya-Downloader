@@ -31,6 +31,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 path = ""
 
+
 class Ximalaya:
     def __init__(self):
         self.default_headers = {
@@ -448,15 +449,15 @@ class Ximalaya:
             print("2. Microsoft Edge")
             choice = input()
             if choice == "1":
-                    option = webdriver.ChromeOptions()
-                    option.add_experimental_option("detach", True)
-                    option.add_experimental_option('excludeSwitches', ['enable-logging'])
-                    driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
+                option = webdriver.ChromeOptions()
+                option.add_experimental_option("detach", True)
+                option.add_experimental_option('excludeSwitches', ['enable-logging'])
+                driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
             elif choice == "2":
-                    option = webdriver.EdgeOptions()
-                    option.add_experimental_option("detach", True)
-                    option.add_experimental_option('excludeSwitches', ['enable-logging'])
-                    driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=option)
+                option = webdriver.EdgeOptions()
+                option.add_experimental_option("detach", True)
+                option.add_experimental_option('excludeSwitches', ['enable-logging'])
+                driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=option)
             else:
                 return
             print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功浏览器会自动关闭")
