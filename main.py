@@ -29,6 +29,8 @@ file_handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
+path = ""
+
 
 class Ximalaya:
     def __init__(self):
@@ -159,7 +161,7 @@ class Ximalaya:
     def get_sound(self, sound_name, sound_url):
         retries = 3
         sound_name = self.replace_invalid_chars(sound_name)
-        if os.path.exists(f"./download/{sound_name}.m4a"):
+        if os.path.exists(f"{path}/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
             return
         while retries > 0:
@@ -168,24 +170,24 @@ class Ximalaya:
                 response = requests.get(sound_url, headers=self.default_headers, timeout=30)
                 break
             except Exception as e:
-                print(colorama.Fore.RED + f'{sound_name}下载失败！')
-                logger.debug(f'{sound_name}下载失败！')
+                logger.debug(f'{sound_name}第{4 - retries}次下载失败！')
                 logger.debug(traceback.format_exc())
                 retries -= 1
-            print(f'{sound_name}经过三次重试后下载失败！')
+        if retries == 0:
+            print(colorama.Fore.RED + f'{sound_name}下载失败！')
             logger.debug(f'{sound_name}经过三次重试后下载失败！')
-            logger.debug(traceback.format_exc())
             return False
         sound_file = response.content
-        if not os.path.exists(f"./download"):
-            os.makedirs(f"./download")
-        with open(f"./download/{sound_name}.m4a", mode="wb") as f:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        with open(f"{path}/{sound_name}.m4a", mode="wb") as f:
             f.write(sound_file)
         print(f'{sound_name}下载完成！')
         logger.debug(f'{sound_name}下载完成！')
 
     # 协程下载声音
     async def async_get_sound(self, sound_name, sound_url, album_name, session, num=None):
+        retries = 3
         logger.debug(f'开始下载声音{sound_name}')
         if num is None:
             sound_name = self.replace_invalid_chars(sound_name)
@@ -193,20 +195,26 @@ class Ximalaya:
             sound_name = f"{num}-{sound_name}"
             sound_name = self.replace_invalid_chars(sound_name)
         album_name = self.replace_invalid_chars(album_name)
-        if not os.path.exists(f"./download/{album_name}"):
-            os.makedirs(f"./download/{album_name}")
-        if os.path.exists(f"./download/{sound_name}.m4a"):
+        if not os.path.exists(f"{path}/{album_name}"):
+            os.makedirs(f"{path}/{album_name}")
+        if os.path.exists(f"{path}/{album_name}/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
-        try:
-            async with session.get(sound_url, headers=self.default_headers, timeout=300) as response:
-                async with aiofiles.open(f"./download/{album_name}/{sound_name}.m4a", mode="wb") as f:
-                    await f.write(await response.content.read())
-            print(f'{sound_name}下载完成！')
-            logger.debug(f'{sound_name}下载完成！')
-        except Exception as e:
+        while retries > 0:
+            try:
+                async with session.get(sound_url, headers=self.default_headers, timeout=300) as response:
+                    async with aiofiles.open(f"{path}/{album_name}/{sound_name}.m4a", mode="wb") as f:
+                        await f.write(await response.content.read())
+                print(f'{sound_name}下载完成！')
+                logger.debug(f'{sound_name}下载完成！')
+                break
+            except Exception as e:
+                print(colorama.Fore.RED + f'{sound_name}下载失败！')
+                logger.debug(f'{sound_name}第{4 - retries}次下载失败！')
+                logger.debug(traceback.format_exc())
+                retries -= 1
+        if retries == 0:
             print(colorama.Fore.RED + f'{sound_name}下载失败！')
-            logger.debug(f'{sound_name}下载失败！')
-            logger.debug(traceback.format_exc())
+            logger.debug(f'{sound_name}经过三次重试后下载失败！')
 
     # 下载专辑中的选定声音
     async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
@@ -384,18 +392,34 @@ class Ximalaya:
         await session.close()
         print("专辑全部声音下载完成！")
 
-    # 获取配置文件中的cookie
-    def get_cookie(self):
+    # 获取配置文件中的cookie和path
+    def analyze_config(self):
         try:
             with open("config.json", "r") as f:
                 config = json.load(f)
         except:
-            self.initialize_config()
+            with open("config.json", "w") as f:
+                config = {
+                    "cookie": "",
+                    "path": ""
+                }
+                json.dump(config, f)
+            return
         try:
             cookie = config["cookie"]
         except:
-            return False
-        return cookie
+            config["cookie"] = ""
+            with open("config.json", "w") as f:
+                json.dump(config, f)
+            cookie = False
+        try:
+            path = config["path"]
+        except:
+            config["path"] = ""
+            with open("config.json", "w") as f:
+                json.dump(config, f)
+            path = False
+        return cookie, path
 
     # 判断cookie是否有效
     def judge_cookie(self, cookie):
@@ -415,14 +439,6 @@ class Ximalaya:
         else:
             return False
 
-    # 初始化配置文件
-    def initialize_config(self):
-        with open("config.json", "w") as f:
-            config = {
-                "cookie": ""
-            }
-            json.dump(config, f)
-
     # 登录喜马拉雅账号
     def login(self):
         print("请输入登录方式：")
@@ -435,15 +451,15 @@ class Ximalaya:
             print("2. Microsoft Edge")
             choice = input()
             if choice == "1":
-                    option = webdriver.ChromeOptions()
-                    option.add_experimental_option("detach", True)
-                    option.add_experimental_option('excludeSwitches', ['enable-logging'])
-                    driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
+                option = webdriver.ChromeOptions()
+                option.add_experimental_option("detach", True)
+                option.add_experimental_option('excludeSwitches', ['enable-logging'])
+                driver = webdriver.Chrome(ChromeDriverManager().install(), options=option)
             elif choice == "2":
-                    option = webdriver.EdgeOptions()
-                    option.add_experimental_option("detach", True)
-                    option.add_experimental_option('excludeSwitches', ['enable-logging'])
-                    driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=option)
+                option = webdriver.EdgeOptions()
+                option.add_experimental_option("detach", True)
+                option.add_experimental_option('excludeSwitches', ['enable-logging'])
+                driver = webdriver.Edge(EdgeChromiumDriverManager().install(), options=option)
             else:
                 return
             print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功浏览器会自动关闭")
@@ -496,12 +512,18 @@ class ConsoleVersion:
         self.loop = asyncio.get_event_loop()
 
     def run(self):
+        global path
         print("欢迎使用喜马拉雅下载器")
-        cookie = self.ximalaya.get_cookie()
+        cookie, path = self.ximalaya.analyze_config()
         if not cookie:
             username = False
         else:
             username = self.ximalaya.judge_cookie(cookie)
+        if os.path.isdir(path):
+            print(f"检测到已设置下载路径为{path}，如果想要修改下载路径，请修改config.json文件中的path字段，将path字段删除或者将值设置为空字符串可恢复默认下载路径")
+        else:
+            print('在config文件中未检测到有效的下载路径，将使用默认下载路径，如果想要修改下载路径，请修改config.json文件中的path字段为你想要的下载路径')
+            path = './download'
         if not username:
             print("未检测到有效喜马拉雅登录信息，请选择是否要登录：")
             print("1. 登录")
@@ -511,7 +533,7 @@ class ConsoleVersion:
                 self.ximalaya.login()
                 headers = {
                     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
-                    "cookie": self.ximalaya.get_cookie()
+                    "cookie": self.ximalaya.analyze_config()[0]
                 }
                 logined = True
             elif choice == "2":
@@ -524,7 +546,7 @@ class ConsoleVersion:
             print(f"已检测到有效登录信息，当前登录用户为{username}，如需切换账号请删除config.json文件然后重新启动本程序！")
             headers = {
                 "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
-                "cookie": self.ximalaya.get_cookie()
+                "cookie": self.ximalaya.analyze_config()[0]
             }
             logined = True
         while True:
