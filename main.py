@@ -404,7 +404,7 @@ class Ximalaya:
                     "path": ""
                 }
                 json.dump(config, f)
-            return None, None
+            return False, False
         try:
             cookie = config["cookie"]
         except:
