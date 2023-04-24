@@ -236,6 +236,7 @@ class Ximalaya:
                 tasks.append(asyncio.create_task(self.async_get_sound(sound[0], sound[1], album_name, session)))
         await asyncio.wait(tasks)
         await session.close()
+        print("专辑全部声音下载完成！")
 
     # 解密vip声音url
     def decrypt_url(self, ciphertext):
@@ -247,13 +248,13 @@ class Ximalaya:
         return plaintext
 
     # 获取vip声音的加密url，如果成功返回加密url，否则返回False
-    def get_encrypted_url(self, sound_id, headers):
+    def get_encrypted_url(self, sound_id, headers, quality):
         logger.debug(f'开始获取ID为{sound_id}的vip声音的加密url')
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
             "trackId": sound_id,
-            "trackQualityLevel": 1
+            "trackQualityLevel": quality
         }
         try:
             response = requests.get(url, headers=headers, params=params, timeout=30)
@@ -273,13 +274,13 @@ class Ximalaya:
         return encrypted_url
 
     # 协程获取vip声音的加密url
-    async def async_get_encrypted_url(self, sound_id, session, headers):
+    async def async_get_encrypted_url(self, sound_id, session, headers, quality):
         logger.debug(f'开始获取ID为{sound_id}的vip声音的加密url')
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
             "trackId": sound_id,
-            "trackQualityLevel": 1
+            "trackQualityLevel": quality
         }
         async with session.get(url, headers=headers, params=params, timeout=30) as response:
             try:
@@ -346,18 +347,18 @@ class Ximalaya:
             return 2  # 未购专辑
 
     # 下载单个vip声音
-    def get_vip_sound(self, sound_name, sound_id, headers):
-        encrypted_url = self.get_encrypted_url(sound_id, headers)
+    def get_vip_sound(self, sound_name, sound_id, headers, quality):
+        encrypted_url = self.get_encrypted_url(sound_id, headers, quality)
         sound_url = self.decrypt_url(encrypted_url)
         self.get_sound(sound_name, sound_url)
 
     # 下载vip专辑中的选定声音
-    async def get_selected_vip_sounds(self, sounds, album_name, start, end, headers, number=True):
+    async def get_selected_vip_sounds(self, sounds, album_name, start, end, headers, quality, number=True):
         tasks = []
         session = aiohttp.ClientSession()
         for i in range(start, end + 1):
             sound_id = sounds[i - 1]["trackId"]
-            tasks.append(asyncio.create_task(self.async_get_encrypted_url(sound_id, session, headers)))
+            tasks.append(asyncio.create_task(self.async_get_encrypted_url(sound_id, session, headers, quality)))
         encrypted_urls = await asyncio.gather(*tasks)
         await asyncio.wait(tasks)
         tasks = []
@@ -389,6 +390,7 @@ class Ximalaya:
                 num += 1
         await asyncio.wait(tasks)
         await session.close()
+        print("专辑全部声音下载完成！")
 
     # 获取配置文件中的cookie和path
     def analyze_config(self):
@@ -402,7 +404,7 @@ class Ximalaya:
                     "path": ""
                 }
                 json.dump(config, f)
-            return
+            return False, False
         try:
             cookie = config["cookie"]
         except:
@@ -573,8 +575,17 @@ class ConsoleVersion:
                     self.ximalaya.get_sound(sound_name, sound_url)
                 elif sound_type == 1:
                     sound_name, _ = self.ximalaya.analyze_sound(sound_id)
-                    print(f"声音名{sound_name}，判断为已购付费声音或vip免费声音，正在开始下载……")
-                    self.ximalaya.get_vip_sound(sound_name, sound_id, headers)
+                    while True:
+                        print(f"声音名{sound_name}，判断为已购付费声音或vip免费声音，请选择您想要下载的音质：（直接回车默认为普通音质）")
+                        print("0. 低音质")
+                        print("1. 普通音质")
+                        print("2. 高音质")
+                        choice = input()
+                        if choice == "0" or choice == "1" or choice == "2":
+                            self.ximalaya.get_vip_sound(sound_name, sound_id, headers, int(choice))
+                            break
+                        else:
+                            print("输入错误，请重新输入！")
                 else:
                     print(f"声音名{sound_name}，判断为付费声音，请登录已购买该声音的账号后再尝试下载！")
             elif choice == "2":
@@ -611,11 +622,19 @@ class ConsoleVersion:
                     if choice == "1":
                         if album_type == 0:
                             self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds)))
-                            print("专辑全部声音下载完成！")
                             break
                         else:
-                            self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, 1, len(sounds), headers))
-                            print("专辑全部声音下载完成！")
+                            while True:
+                                print("请输入您想要下载的音质：（直接回车默认为普通音质）")
+                                print("0. 低音质")
+                                print("1. 普通音质")
+                                print("2. 高音质")
+                                choice = input()
+                                if choice == "0" or choice == "1" or choice == "2":
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, 1, len(sounds), headers, int(choice)))
+                                    break
+                                else:
+                                    print("输入错误，请重新输入！")
                             break
                     elif choice == "2":
                         print("请输入要下载的声音范围，中间用空格隔开，如输入“1 10”则表示下载第1到第10个声音：")
@@ -639,11 +658,19 @@ class ConsoleVersion:
                             continue
                         if album_type == 0:
                             self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end))
-                            print("专辑选定声音下载完成！")
                             break
                         else:
-                            self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, start, end, headers))
-                            print("专辑选定声音下载完成！")
+                            while True:
+                                print("请输入您想要下载的音质：（直接回车默认为普通音质）")
+                                print("0. 低音质")
+                                print("1. 普通音质")
+                                print("2. 高音质")
+                                choice = input()
+                                if choice == "0" or choice == "1" or choice == "2":
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, start, end, headers, int(choice)))
+                                    break
+                                else:
+                                    print("输入错误，请重新输入！")
                             break
                     elif choice == "3":
                         for sound in sounds:
