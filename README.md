@@ -30,8 +30,7 @@
 
 ### 存在的问题
 
-- 由于喜马拉雅官方的限制，理论上付费音频的下载接口每日只能调用不到1000次。如果达到当日限制，建议使用喜马拉雅客户端下载加密的xm文件并使用[Ximalaya-XM-Decrypt
-](https://github.com/Diaoxiaozhang/Ximalaya-XM-Decrypt)解密。
+- 由于喜马拉雅官方的限制，理论上付费音频的下载接口每日只能调用不到1000次。如果达到当日限制，建议使用喜马拉雅客户端下载加密的xm文件并使用[Ximalaya-XM-Decrypt](https://github.com/Diaoxiaozhang/Ximalaya-XM-Decrypt)解密。
 
 ### 手动获取cookie的方法
 
