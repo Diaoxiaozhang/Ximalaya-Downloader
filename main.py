@@ -696,6 +696,8 @@ class ConsoleVersion:
                                 elif choice == "2":
                                     self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end, False))
                                     break
+                                else:
+                                    print("输入错误，请重新输入！")
                             else:
                                 print("输入错误，请重新输入！")
                             break
