@@ -284,7 +284,9 @@ class Ximalaya:
         }
         async with session.get(url, headers=headers, params=params, timeout=60) as response:
             try:
-                encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
+                shit = await response.text()
+                encrypted_url = json.loads(shit)["trackInfo"]["playUrlList"][0]["url"]
+                print(shit)
             except Exception as e:
                 print(colorama.Fore.RED + f'ID为{sound_id}的vip声音解析失败！')
                 logger.debug(f'ID为{sound_id}的vip声音解析失败')
@@ -621,7 +623,19 @@ class ConsoleVersion:
                     choice = input()
                     if choice == "1":
                         if album_type == 0:
-                            self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds)))
+                            while True:
+                                print("请选择是否要在下载的音频文件名中加入序号：")
+                                print("1. 加入序号")
+                                print("2. 不加序号")
+                                choice = input()
+                                if choice == "1":
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds)))
+                                    break
+                                elif choice == "2":
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds), False))
+                                    break
+                                else:
+                                    print("输入错误，请重新输入！")
                             break
                         else:
                             while True:
@@ -630,8 +644,22 @@ class ConsoleVersion:
                                 print("1. 普通音质")
                                 print("2. 高音质")
                                 choice = input()
+                                if choice == "":
+                                    choice = "1"
                                 if choice == "0" or choice == "1" or choice == "2":
-                                    self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, 1, len(sounds), headers, int(choice)))
+                                    while True:
+                                        print("请选择是否要在下载的音频文件名中加入序号：")
+                                        print("1. 加入序号")
+                                        print("2. 不加序号")
+                                        choice = input()
+                                        if choice == "1":
+                                            self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, 1, len(sounds), headers, int(choice)))
+                                            break
+                                        elif choice == "2":
+                                            self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, 1, len(sounds), headers, int(choice), False))
+                                            break
+                                        else:
+                                            print("输入错误，请重新输入！")
                                     break
                                 else:
                                     print("输入错误，请重新输入！")
@@ -657,7 +685,19 @@ class ConsoleVersion:
                             print("输入有误，请重新输入！")
                             continue
                         if album_type == 0:
-                            self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end))
+                            while True:
+                                print("请选择是否要在下载的音频文件名中加入序号：")
+                                print("1. 加入序号")
+                                print("2. 不加序号")
+                                choice = input()
+                                if choice == "1":
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end))
+                                    break
+                                elif choice == "2":
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end, False))
+                                    break
+                            else:
+                                print("输入错误，请重新输入！")
                             break
                         else:
                             while True:
@@ -666,8 +706,22 @@ class ConsoleVersion:
                                 print("1. 普通音质")
                                 print("2. 高音质")
                                 choice = input()
+                                if choice == "":
+                                    choice = "1"
                                 if choice == "0" or choice == "1" or choice == "2":
-                                    self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, start, end, headers, int(choice)))
+                                    while True:
+                                        print("请选择是否要在下载的音频文件名中加入序号：")
+                                        print("1. 加入序号")
+                                        print("2. 不加序号")
+                                        choice = input()
+                                        if choice == "1":
+                                            self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, start, end, headers, int(choice)))
+                                            break
+                                        elif choice == "2":
+                                            self.loop.run_until_complete(self.ximalaya.get_selected_vip_sounds(sounds, album_name, start, end, headers, int(choice), False))
+                                            break
+                                        else:
+                                            print("输入错误，请重新输入！")
                                     break
                                 else:
                                     print("输入错误，请重新输入！")
