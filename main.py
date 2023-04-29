@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import asyncio
 import base64
 import binascii
@@ -24,7 +25,7 @@ import colorama
 colorama.init(autoreset=True)
 logger = logging.getLogger('logger')
 logger.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler('app.log', mode='w')
+file_handler = logging.FileHandler('app.log', mode='w', encoding='utf-8')
 file_handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(formatter)
