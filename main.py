@@ -48,7 +48,7 @@ class Ximalaya:
             "ptype": 1
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
@@ -65,7 +65,7 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=5)
+            response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
@@ -126,7 +126,7 @@ class Ximalaya:
             "ptype": 1
         }
         try:
-            async with session.get(url, headers=self.default_headers, params=params, timeout=30) as response:
+            async with session.get(url, headers=self.default_headers, params=params, timeout=60) as response:
                 sound_url = json.loads(await response.text())["data"]["src"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
@@ -140,7 +140,7 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            async with session.get(url, headers=self.default_headers, params=params, timeout=30) as response:
+            async with session.get(url, headers=self.default_headers, params=params, timeout=60) as response:
                 sound_name = json.loads(await response.text())["trackInfo"]["title"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
@@ -168,7 +168,7 @@ class Ximalaya:
         while retries > 0:
             try:
                 logger.debug(f'开始下载声音{sound_name}')
-                response = requests.get(sound_url, headers=self.default_headers, timeout=30)
+                response = requests.get(sound_url, headers=self.default_headers, timeout=60)
                 break
             except Exception as e:
                 logger.debug(f'{sound_name}第{4 - retries}次下载失败！')
@@ -202,14 +202,13 @@ class Ximalaya:
             print(f'{sound_name}已存在！')
         while retries > 0:
             try:
-                async with session.get(sound_url, headers=self.default_headers, timeout=300) as response:
+                async with session.get(sound_url, headers=self.default_headers, timeout=120) as response:
                     async with aiofiles.open(f"{path}/{album_name}/{sound_name}.m4a", mode="wb") as f:
                         await f.write(await response.content.read())
                 print(f'{sound_name}下载完成！')
                 logger.debug(f'{sound_name}下载完成！')
                 break
             except Exception as e:
-                print(colorama.Fore.RED + f'{sound_name}下载失败！')
                 logger.debug(f'{sound_name}第{4 - retries}次下载失败！')
                 logger.debug(traceback.format_exc())
                 retries -= 1
@@ -283,7 +282,7 @@ class Ximalaya:
             "trackId": sound_id,
             "trackQualityLevel": quality
         }
-        async with session.get(url, headers=headers, params=params, timeout=30) as response:
+        async with session.get(url, headers=headers, params=params, timeout=60) as response:
             try:
                 encrypted_url = json.loads(await response.text())["trackInfo"]["playUrlList"][0]["url"]
             except Exception as e:
