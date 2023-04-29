@@ -396,10 +396,10 @@ class Ximalaya:
     # 获取配置文件中的cookie和path
     def analyze_config(self):
         try:
-            with open("config.json", "r") as f:
+            with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
         except:
-            with open("config.json", "w") as f:
+            with open("config.json", "w", encoding="utf-8") as f:
                 config = {
                     "cookie": "",
                     "path": ""
@@ -410,14 +410,14 @@ class Ximalaya:
             cookie = config["cookie"]
         except:
             config["cookie"] = ""
-            with open("config.json", "w") as f:
+            with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
             cookie = False
         try:
             path = config["path"]
         except:
             config["path"] = ""
-            with open("config.json", "w") as f:
+            with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
             path = False
         return cookie, path
@@ -484,20 +484,20 @@ class Ximalaya:
             cookie = ""
             for cookie_ in cookies:
                 cookie += f"{cookie_['name']}={cookie_['value']}; "
-            with open("config.json", "r") as f:
+            with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
             config["cookie"] = cookie
-            with open("config.json", "w") as f:
+            with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
         elif choice == "2":
             print("请输入cookie：（获取方法详见README）")
             cookie = input()
-            with open("config.json", "r") as f:
+            with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
             config["cookie"] = cookie
             is_cookie_available = self.judge_cookie(cookie)
             if is_cookie_available:
-                with open("config.json", "w") as f:
+                with open("config.json", "w", encoding="utf-8") as f:
                     json.dump(config, f)
                 print("cookie设置成功！")
             else:
