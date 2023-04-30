@@ -40,24 +40,8 @@ class Ximalaya:
         }
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
-    def analyze_sound(self, sound_id):
+    def analyze_sound(self, sound_id, headers):
         logger.debug(f'开始解析ID为{sound_id}的声音')
-        url = "https://www.ximalaya.com/revision/play/v1/audio"
-        params = {
-            "id": sound_id,
-            "ptype": 1
-        }
-        try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
-        except Exception as e:
-            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
-            logger.debug(f'ID为{sound_id}的声音解析失败！')
-            logger.debug(traceback.format_exc())
-            return False, False
-        try:
-            sound_url = response.json()["data"]["src"]
-        except:
-            sound_url = None
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -65,7 +49,7 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
+            response = requests.get(url, headers=headers, params=params, timeout=15)
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
@@ -73,11 +57,13 @@ class Ximalaya:
             return False, False
         try:
             sound_name = response.json()["trackInfo"]["title"]
+            encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
             return False, False
+        sound_url = self.decrypt_url(encrypted_url)
         logger.debug(f'ID为{sound_id}的声音解析成功！')
         return sound_name, sound_url
 
@@ -106,7 +92,7 @@ class Ximalaya:
                 "pageSize": 100
             }
             try:
-                response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
+                response = requests.get(url, headers=self.default_headers, params=params, timeout=30)
             except Exception as e:
                 print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
                 logger.debug(f'ID为{album_id}的专辑解析失败！')
@@ -118,21 +104,7 @@ class Ximalaya:
         return album_name, sounds
 
     # 协程解析声音
-    async def async_analyze_sound(self, sound_id, session):
-        logger.debug(f'开始解析ID为{sound_id}的声音')
-        url = "https://www.ximalaya.com/revision/play/v1/audio"
-        params = {
-            "id": sound_id,
-            "ptype": 1
-        }
-        try:
-            async with session.get(url, headers=self.default_headers, params=params, timeout=60) as response:
-                sound_url = json.loads(await response.text())["data"]["src"]
-        except Exception as e:
-            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
-            logger.debug(f'ID为{sound_id}的声音解析失败！')
-            logger.debug(traceback.format_exc())
-            return False, False
+    async def async_analyze_sound(self, sound_id, session, headers):
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -140,13 +112,16 @@ class Ximalaya:
             "trackQualityLevel": 1
         }
         try:
-            async with session.get(url, headers=self.default_headers, params=params, timeout=60) as response:
-                sound_name = json.loads(await response.text())["trackInfo"]["title"]
+            async with session.get(url, headers=headers, params=params, timeout=60) as response:
+                response_json = json.loads(await response.text())
+                sound_name = response_json["trackInfo"]["title"]
+                encrypted_url = response_json["trackInfo"]["playUrlList"][0]["url"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
             return False, False
+        sound_url = self.decrypt_url(encrypted_url)
         logger.debug(f'ID为{sound_id}的声音解析成功')
         return sound_name, sound_url
 
@@ -202,7 +177,7 @@ class Ximalaya:
             print(f'{sound_name}已存在！')
         while retries > 0:
             try:
-                async with session.get(sound_url, headers=self.default_headers, timeout=60) as response:
+                async with session.get(sound_url, headers=self.default_headers, timeout=120) as response:
                     async with aiofiles.open(f"{path}/{album_name}/{sound_name}.m4a", mode="wb") as f:
                         await f.write(await response.content.read())
                 print(f'{sound_name}下载完成！')
@@ -217,13 +192,13 @@ class Ximalaya:
             logger.debug(f'{sound_name}经过三次重试后下载失败！')
 
     # 下载专辑中的选定声音
-    async def get_selected_sounds(self, sounds, album_name, start, end, number=True):
+    async def get_selected_sounds(self, sounds, album_name, start, end, headers, number=True):
         tasks = []
         session = aiohttp.ClientSession()
         digits = len(str(len(sounds)))
         for i in range(start - 1, end):
             sound_id = sounds[i]["trackId"]
-            tasks.append(asyncio.create_task(self.async_analyze_sound(sound_id, session)))
+            tasks.append(asyncio.create_task(self.async_analyze_sound(sound_id, session, headers)))
         sounds = await asyncio.gather(*tasks)
         if number:
             num = start
@@ -522,7 +497,16 @@ class ConsoleVersion:
         else:
             print('在config文件中未检测到有效的下载路径，将使用默认下载路径，如果想要修改下载路径，请修改config.json文件中的path字段为你想要的下载路径')
             path = './download'
-        if not username:
+        response = requests.get(f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}?device=web&trackId=188017958&trackQualityLevel=1", headers=self.ximalaya.default_headers)
+        if response.json()["ret"] == 927 and not username:
+            print("检测到当前ip不在中国大陆，由于喜马拉雅官方限制，必须登录才能继续使用，将自动跳转到登录流程")
+            self.ximalaya.login()
+            headers = {
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+                "cookie": self.ximalaya.analyze_config()[0]
+            }
+            logined = True
+        elif not username:
             print("未检测到有效喜马拉雅登录信息，请选择是否要登录：")
             print("1. 登录")
             print("2. 不登录")
@@ -568,13 +552,13 @@ class ConsoleVersion:
                 if sound_type is False:
                     continue
                 if sound_type == 0:
-                    sound_name, sound_url = self.ximalaya.analyze_sound(sound_id)
+                    sound_name, sound_url = self.ximalaya.analyze_sound(sound_id, headers)
                     if not sound_name:
                         continue
                     print(f"声音名{sound_name}，判断为免费声音，正在开始下载……")
                     self.ximalaya.get_sound(sound_name, sound_url)
                 elif sound_type == 1:
-                    sound_name, _ = self.ximalaya.analyze_sound(sound_id)
+                    sound_name, _ = self.ximalaya.analyze_sound(sound_id, headers)
                     while True:
                         print(f"声音名{sound_name}，判断为已购付费声音或vip免费声音，请选择您想要下载的音质：（直接回车默认为普通音质）")
                         print("0. 低音质")
@@ -629,10 +613,10 @@ class ConsoleVersion:
                                 print("2. 不加序号")
                                 choice = input()
                                 if choice == "1":
-                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds)))
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds), headers))
                                     break
                                 elif choice == "2":
-                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds), False))
+                                    self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, 1, len(sounds), headers, False))
                                     break
                                 else:
                                     print("输入错误，请重新输入！")
@@ -693,10 +677,10 @@ class ConsoleVersion:
                                     print("2. 不加序号")
                                     choice = input()
                                     if choice == "1":
-                                        self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end))
+                                        self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end, headers))
                                         break
                                     elif choice == "2":
-                                        self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end, False))
+                                        self.loop.run_until_complete(self.ximalaya.get_selected_sounds(sounds, album_name, start, end, headers, False))
                                         break
                                     else:
                                         print("输入错误，请重新输入！")
