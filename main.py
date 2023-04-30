@@ -376,17 +376,15 @@ class Ximalaya:
             return False
         if number:
             digits = len(str(len(sounds)))
-            file_num = start
-            num = 0
+            num = start
             for url in urls:
-                file_num_ = str(file_num).zfill(digits)
-                tasks.append(asyncio.create_task(self.async_get_sound(sounds[num]["title"], url, album_name, session, file_num_)))
+                num_ = str(num).zfill(digits)
+                tasks.append(asyncio.create_task(self.async_get_sound(sounds[num - 1]["title"], url, album_name, session, num_)))
                 num += 1
-                file_num += 1
         else:
-            num = 0
+            num = start
             for url in urls:
-                tasks.append(asyncio.create_task(self.async_get_sound(sounds[num]["title"], url, album_name, session)))
+                tasks.append(asyncio.create_task(self.async_get_sound(sounds[num - 1]["title"], url, album_name, session)))
                 num += 1
         await asyncio.wait(tasks)
         await session.close()
