@@ -730,6 +730,7 @@ class ConsoleVersion:
                                     else:
                                         print("输入错误，请重新输入！")
                                 break
+                        break
                     elif choice == "3":
                         for sound in sounds:
                             print(f"{sound['index']}. {sound['title']}")
