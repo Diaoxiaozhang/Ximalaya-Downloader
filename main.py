@@ -53,12 +53,12 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
-            return False
+            return False, False
         try:
             sound_url = response.json()["data"]["src"]
         except:
             sound_url = None
-        url = "https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/1677297989848"
+        url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
             "trackId": sound_id,
@@ -70,14 +70,14 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
-            return False
+            return False, False
         try:
             sound_name = response.json()["trackInfo"]["title"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
-            return False
+            return False, False
         logger.debug(f'ID为{sound_id}的声音解析成功！')
         return sound_name, sound_url
 
@@ -132,7 +132,7 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
-            return False
+            return False, False
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
             "device": "web",
@@ -146,7 +146,7 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
-            return False
+            return False, False
         logger.debug(f'ID为{sound_id}的声音解析成功')
         return sound_name, sound_url
 
@@ -569,6 +569,8 @@ class ConsoleVersion:
                     continue
                 if sound_type == 0:
                     sound_name, sound_url = self.ximalaya.analyze_sound(sound_id)
+                    if not sound_name:
+                        continue
                     print(f"声音名{sound_name}，判断为免费声音，正在开始下载……")
                     self.ximalaya.get_sound(sound_name, sound_url)
                 elif sound_type == 1:
