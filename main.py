@@ -96,7 +96,7 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
             logger.debug(f'ID为{album_id}的专辑解析失败！')
             logger.debug(traceback.format_exc())
-            return False
+            return False, False
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
         for page in range(1, pages + 1):
@@ -111,7 +111,7 @@ class Ximalaya:
                 print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
                 logger.debug(f'ID为{album_id}的专辑解析失败！')
                 logger.debug(traceback.format_exc())
-                return False
+                return False, False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
         logger.debug(f'ID为{album_id}的专辑解析成功')
@@ -202,7 +202,7 @@ class Ximalaya:
             print(f'{sound_name}已存在！')
         while retries > 0:
             try:
-                async with session.get(sound_url, headers=self.default_headers, timeout=120) as response:
+                async with session.get(sound_url, headers=self.default_headers, timeout=60) as response:
                     async with aiofiles.open(f"{path}/{album_name}/{sound_name}.m4a", mode="wb") as f:
                         await f.write(await response.content.read())
                 print(f'{sound_name}下载完成！')
@@ -598,6 +598,8 @@ class ConsoleVersion:
                         print("输入有误，请重新输入！")
                         continue
                 album_name, sounds = self.ximalaya.analyze_album(album_id)
+                if not sounds:
+                    continue
                 album_type = self.ximalaya.judge_album(album_id, headers)
                 if album_type == 0:
                     print(f"成功解析免费专辑{album_id}，专辑名{album_name}，共{len(sounds)}个声音")
@@ -610,7 +612,7 @@ class ConsoleVersion:
                         print(f"成功解析付费专辑{album_id}，专辑名{album_name}，但是当前未登陆账号，请登录可以下载此专辑的账号后再尝试下载")
                     continue
                 else:
-                    break
+                    continue
                 while True:
                     print("请选择要使用的功能：")
                     print("1. 下载整个专辑")
