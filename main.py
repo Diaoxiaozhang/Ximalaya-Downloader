@@ -46,7 +46,7 @@ class Ximalaya:
         params = {
             "device": "web",
             "trackId": sound_id,
-            "trackQualityLevel": 1
+            "trackQualityLevel": 2
         }
         try:
             response = requests.get(url, headers=headers, params=params, timeout=15)
@@ -57,15 +57,22 @@ class Ximalaya:
             return False, False
         try:
             sound_name = response.json()["trackInfo"]["title"]
-            encrypted_url = response.json()["trackInfo"]["playUrlList"][0]["url"]
+            encrypted_url_list = response.json()["trackInfo"]["playUrlList"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
             return False, False
-        sound_url = self.decrypt_url(encrypted_url)
+        sound_urls = {0: "", 1: "", 2: ""}
+        for encrypted_url in encrypted_url_list:
+            if encrypted_url["type"] == "M4A_128":
+                sound_urls[2] = self.decrypt_url(encrypted_url["url"])
+            elif encrypted_url["type"] == "M4A_64":
+                sound_urls[1] = self.decrypt_url(encrypted_url["url"])
+            elif encrypted_url["type"] == "M4A_24":
+                sound_urls[0] = self.decrypt_url(encrypted_url["url"])
         logger.debug(f'ID为{sound_id}的声音解析成功！')
-        return sound_name, sound_url
+        return sound_name, sound_urls
 
     # 解析专辑，如果成功返回专辑名和专辑声音列表，否则返回False
     def analyze_album(self, album_id):
@@ -552,11 +559,24 @@ class ConsoleVersion:
                 if sound_type is False:
                     continue
                 if sound_type == 0:
-                    sound_name, sound_url = self.ximalaya.analyze_sound(sound_id, headers)
+                    sound_name, sound_urls = self.ximalaya.analyze_sound(sound_id, headers)
                     if not sound_name:
                         continue
-                    print(f"声音名{sound_name}，判断为免费声音，正在开始下载……")
-                    self.ximalaya.get_sound(sound_name, sound_url)
+                    print(f"声音名{sound_name}，判断为免费声音，请选择您要下载的音质：")
+                    print("0. 低音质")
+                    print("1. 普通音质")
+                    if sound_urls[2] != "":
+                        print("2. 高音质")
+                    while True:
+                        choice = input()
+                        if choice == "0" or choice == "1":
+                            self.ximalaya.get_sound(sound_name, sound_urls[int(choice)])
+                            break
+                        elif choice == "2" and sound_urls[2] != "":
+                            self.ximalaya.get_sound(sound_name, sound_urls[2])
+                            break
+                        else:
+                            print("输入错误，请重新输入！")
                 elif sound_type == 1:
                     sound_name, _ = self.ximalaya.analyze_sound(sound_id, headers)
                     while True:
@@ -684,8 +704,6 @@ class ConsoleVersion:
                                         break
                                     else:
                                         print("输入错误，请重新输入！")
-                                else:
-                                    print("输入错误，请重新输入！")
                                 break
                             else:
                                 while True:
