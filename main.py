@@ -54,7 +54,9 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
-            return False, False
+            return False
+        if not response.json()["trackInfo"]["isAuthorized"]:
+            return 0  # 未购买或未登录vip账号
         try:
             sound_name = response.json()["trackInfo"]["title"]
             encrypted_url_list = response.json()["trackInfo"]["playUrlList"]
@@ -62,17 +64,17 @@ class Ximalaya:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
-            return False, False
-        sound_urls = {0: "", 1: "", 2: ""}
+            return False
+        sound_info = {"name": sound_name, 0: "", 1: "", 2: ""}
         for encrypted_url in encrypted_url_list:
             if encrypted_url["type"] == "M4A_128":
-                sound_urls[2] = self.decrypt_url(encrypted_url["url"])
+                sound_info[2] = self.decrypt_url(encrypted_url["url"])
             elif encrypted_url["type"] == "M4A_64":
-                sound_urls[1] = self.decrypt_url(encrypted_url["url"])
+                sound_info[1] = self.decrypt_url(encrypted_url["url"])
             elif encrypted_url["type"] == "M4A_24":
-                sound_urls[0] = self.decrypt_url(encrypted_url["url"])
+                sound_info[0] = self.decrypt_url(encrypted_url["url"])
         logger.debug(f'ID为{sound_id}的声音解析成功！')
-        return sound_name, sound_urls
+        return sound_info
 
     # 解析专辑，如果成功返回专辑名和专辑声音列表，否则返回False
     def analyze_album(self, album_id):
@@ -116,21 +118,28 @@ class Ximalaya:
         params = {
             "device": "web",
             "trackId": sound_id,
-            "trackQualityLevel": 1
+            "trackQualityLevel": 2
         }
         try:
             async with session.get(url, headers=headers, params=params, timeout=60) as response:
                 response_json = json.loads(await response.text())
                 sound_name = response_json["trackInfo"]["title"]
-                encrypted_url = response_json["trackInfo"]["playUrlList"][0]["url"]
+                encrypted_url_list = response.json()["trackInfo"]["playUrlList"]
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
             return False, False
-        sound_url = self.decrypt_url(encrypted_url)
+        sound_urls = {0: "", 1: "", 2: ""}
+        for encrypted_url in encrypted_url_list:
+            if encrypted_url["type"] == "M4A_128":
+                sound_urls[2] = self.decrypt_url(encrypted_url["url"])
+            elif encrypted_url["type"] == "M4A_64":
+                sound_urls[1] = self.decrypt_url(encrypted_url["url"])
+            elif encrypted_url["type"] == "M4A_24":
+                sound_urls[0] = self.decrypt_url(encrypted_url["url"])
         logger.debug(f'ID为{sound_id}的声音解析成功')
-        return sound_name, sound_url
+        return sound_name, sound_urls
 
     # 将文件名中不能包含的字符替换为空格
     def replace_invalid_chars(self, name):
@@ -504,7 +513,8 @@ class ConsoleVersion:
         else:
             print('在config文件中未检测到有效的下载路径，将使用默认下载路径，如果想要修改下载路径，请修改config.json文件中的path字段为你想要的下载路径')
             path = './download'
-        response = requests.get(f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}?device=web&trackId=188017958&trackQualityLevel=1", headers=self.ximalaya.default_headers)
+        response = requests.get(f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}?device=web&trackId=188017958&trackQualityLevel=1",
+                                headers=self.ximalaya.default_headers)
         if response.json()["ret"] == 927 and not username:
             print("检测到当前ip不在中国大陆，由于喜马拉雅官方限制，必须登录才能继续使用，将自动跳转到登录流程")
             self.ximalaya.login()
@@ -555,43 +565,30 @@ class ConsoleVersion:
                     except:
                         print("输入有误，请重新输入！")
                         continue
-                sound_type = self.ximalaya.judge_sound(sound_id, headers)
-                if sound_type is False:
+                sound_info = self.ximalaya.analyze_sound(sound_id, headers)
+                if sound_info is False:
                     continue
-                if sound_type == 0:
-                    sound_name, sound_urls = self.ximalaya.analyze_sound(sound_id, headers)
-                    if not sound_name:
-                        continue
-                    print(f"声音名{sound_name}，判断为免费声音，请选择您要下载的音质：")
-                    print("0. 低音质")
-                    print("1. 普通音质")
-                    if sound_urls[2] != "":
-                        print("2. 高音质")
-                    while True:
-                        choice = input()
-                        if choice == "0" or choice == "1":
-                            self.ximalaya.get_sound(sound_name, sound_urls[int(choice)])
-                            break
-                        elif choice == "2" and sound_urls[2] != "":
-                            self.ximalaya.get_sound(sound_name, sound_urls[2])
-                            break
-                        else:
-                            print("输入错误，请重新输入！")
-                elif sound_type == 1:
-                    sound_name, _ = self.ximalaya.analyze_sound(sound_id, headers)
-                    while True:
-                        print(f"声音名{sound_name}，判断为已购付费声音或vip免费声音，请选择您想要下载的音质：（直接回车默认为普通音质）")
-                        print("0. 低音质")
-                        print("1. 普通音质")
-                        print("2. 高音质")
-                        choice = input()
-                        if choice == "0" or choice == "1" or choice == "2":
-                            self.ximalaya.get_vip_sound(sound_name, sound_id, headers, int(choice))
-                            break
-                        else:
-                            print("输入错误，请重新输入！")
-                else:
-                    print(f"声音名{sound_name}，判断为付费声音，请登录已购买该声音的账号后再尝试下载！")
+                if sound_info == 0 and logined:
+                    print(f"ID为{sound_id}的声音解析为vip声音或付费声音，但当前登录账号未购买！")
+                    continue
+                elif sound_info == 0 and not logined:
+                    print(f"ID为{sound_id}的声音解析为vip声音或付费声音，请登录后再试！")
+                    continue
+                print(f"成功解析声音{sound_info['name']}，请选择您要下载的音质：")
+                print("0. 低音质")
+                print("1. 普通音质")
+                if sound_info[2] != "":
+                    print("2. 高音质")
+                while True:
+                    choice = input()
+                    if choice == "0" or choice == "1":
+                        self.ximalaya.get_sound(sound_info["name"], sound_info[int(choice)])
+                        break
+                    elif choice == "2" and sound_info[2] != "":
+                        self.ximalaya.get_sound(sound_info["name"], sound_info[2])
+                        break
+                    else:
+                        print("输入有误，请重新输入！")
             elif choice == "2":
                 print("请输入专辑ID或链接：")
                 _ = input()
