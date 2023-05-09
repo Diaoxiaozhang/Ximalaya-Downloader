@@ -276,7 +276,7 @@ class Ximalaya:
         try:
             with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
-        except:
+        except Exception:
             with open("config.json", "w", encoding="utf-8") as f:
                 config = {
                     "cookie": "",
@@ -286,14 +286,14 @@ class Ximalaya:
             return False, False
         try:
             cookie = config["cookie"]
-        except:
+        except Exception:
             config["cookie"] = ""
             with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
             cookie = False
         try:
             path = config["path"]
-        except:
+        except Exception:
             config["path"] = ""
             with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
@@ -452,7 +452,7 @@ class ConsoleVersion:
                 except ValueError:
                     try:
                         sound_id = re.search(r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
-                    except:
+                    except Exception:
                         print("输入有误，请重新输入！")
                         continue
                 sound_info = self.ximalaya.analyze_sound(sound_id, headers)
@@ -489,7 +489,7 @@ class ConsoleVersion:
                 except ValueError:
                     try:
                         album_id = re.search(r"ximalaya.com/album/(?P<album_id>\d+)", input_album).group('album_id')
-                    except:
+                    except Exception:
                         print("输入有误，请重新输入！")
                         continue
                 album_name, sounds = self.ximalaya.analyze_album(album_id)
@@ -526,7 +526,7 @@ class ConsoleVersion:
                                     start, end = download_range.split(" ")
                                     start = int(start)
                                     end = int(end)
-                                except:
+                                except Exception:
                                     print("输入有误，请重新输入！")
                                     continue
                                 if start > end or start < 1 or end > len(sounds):
