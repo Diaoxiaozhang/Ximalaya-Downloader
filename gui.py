@@ -16,17 +16,6 @@ from view.FrontPage import Ui_frontPageFrame
 from view.SettingPage import Ui_settingPageFrame
 
 
-class Widget(QFrame):
-
-    def __init__(self, text: str, parent=None):
-        super().__init__(parent=parent)
-        self.label = QLabel(text, self)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.hBoxLayout = QHBoxLayout(self)
-        self.hBoxLayout.addWidget(self.label, 1, Qt.AlignCenter)
-        self.setObjectName(text.replace(' ', '-'))
-
-
 class FrontPageFrame(QFrame, Ui_frontPageFrame):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
@@ -148,11 +137,12 @@ class Window(FramelessWindow):
 
         self.stackWidget.currentChanged.connect(self.onCurrentInterfaceChanged)
         self.stackWidget.setCurrentIndex(1)
+        self.stackWidget.setCurrentIndex(0)
 
     def initWindow(self):
         self.resize(900, 700)
         self.setWindowIcon(QIcon('resource/logo.png'))
-        self.setWindowTitle('PyQt-Fluent-Widgets')
+        self.setWindowTitle('Ximalaya-Downloader')
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
 
         desktop = QApplication.screens()[0].availableGeometry()
