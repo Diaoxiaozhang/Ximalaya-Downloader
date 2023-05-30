@@ -154,7 +154,7 @@ class Window(FramelessWindow):
 
     def initWindow(self):
         self.resize(900, 700)
-        self.setWindowIcon(QIcon('resource/logo.png'))
+        self.setWindowIcon(QIcon('resource/icon.png'))
         self.setWindowTitle('Ximalaya-Downloader')
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
 
