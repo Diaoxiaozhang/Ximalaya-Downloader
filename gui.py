@@ -146,7 +146,7 @@ class Window(FramelessWindow):
         # qrouter.setDefaultRouteKey(self.stackWidget, self.musicInterface.objectName())
 
         # set the maximum width
-        # self.navigationInterface.setExpandWidth(300)
+        self.navigationInterface.setExpandWidth(250)
 
         self.stackWidget.currentChanged.connect(self.onCurrentInterfaceChanged)
         self.stackWidget.setCurrentIndex(1)
