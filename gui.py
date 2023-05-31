@@ -16,7 +16,7 @@ import sys
 from typing import Optional
 from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont
-from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QLabel
+from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QLabel, QHeaderView
 
 from qfluentwidgets import (NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
                             isDarkTheme, setTheme, Theme, setThemeColor, qrouter)
@@ -33,6 +33,23 @@ class FrontPageFrame(QFrame, Ui_frontPageFrame):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.initTable()
+    
+    def initTable(self):
+        self.TableWidget.verticalHeader().setVisible(False)
+        column_widths = [2, 2, 1, 1]
+        total_width = sum(column_widths)
+        self.TableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table_width = self.TableWidget.width()
+        self.TableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Custom)
+        for col, width in enumerate(column_widths):
+            relative_width = width / total_width
+            self.TableWidget.horizontalHeader().resizeSection(col, relative_width * table_width)
+    
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.initTable()
+
 
 
 class DownloadPageFrame(QFrame, Ui_downloadPageFrame):
