@@ -16,24 +16,81 @@
   <property name="styleSheet">
    <string notr="true">background-color: rgb(249, 249, 249);</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label">
-     <property name="font">
-      <font>
-       <pointsize>36</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>首页</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="LineEdit" name="LineEdit">
+       <property name="whatsThis">
+        <string/>
+       </property>
+       <property name="placeholderText">
+        <string>请输入声音或专辑的链接</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="PushButton" name="PushButton">
+       <property name="text">
+        <string>解析</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="TableWidget" name="TableWidget">
+     <row>
+      <property name="text">
+       <string>test</string>
+      </property>
+     </row>
+     <column>
+      <property name="text">
+       <string>声音名</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>专辑名</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>时长</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string/>
+      </property>
+     </column>
+     <item row="0" column="0">
+      <property name="text">
+       <string/>
+      </property>
+     </item>
     </widget>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PushButton</class>
+   <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>LineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>TableWidget</class>
+   <extends>QTableWidget</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
