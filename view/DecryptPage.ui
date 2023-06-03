@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>settingPageFrame</class>
- <widget class="QFrame" name="settingPageFrame">
+ <class>decryptPageFrame</class>
+ <widget class="QFrame" name="decryptPageFrame">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -25,7 +25,7 @@
       </font>
      </property>
      <property name="text">
-      <string>设置</string>
+      <string>XM解密</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

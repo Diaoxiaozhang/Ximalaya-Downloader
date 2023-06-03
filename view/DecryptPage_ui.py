@@ -18,15 +18,15 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QFrame, QHBoxLayout, QLabel,
     QSizePolicy, QWidget)
 
-class Ui_settingPageFrame(object):
-    def setupUi(self, settingPageFrame):
-        if not settingPageFrame.objectName():
-            settingPageFrame.setObjectName(u"settingPageFrame")
-        settingPageFrame.resize(850, 650)
-        settingPageFrame.setStyleSheet(u"background-color: rgb(249, 249, 249);")
-        self.horizontalLayout = QHBoxLayout(settingPageFrame)
+class Ui_decryptPageFrame(object):
+    def setupUi(self, decryptPageFrame):
+        if not decryptPageFrame.objectName():
+            decryptPageFrame.setObjectName(u"decryptPageFrame")
+        decryptPageFrame.resize(850, 650)
+        decryptPageFrame.setStyleSheet(u"background-color: rgb(249, 249, 249);")
+        self.horizontalLayout = QHBoxLayout(decryptPageFrame)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.label = QLabel(settingPageFrame)
+        self.label = QLabel(decryptPageFrame)
         self.label.setObjectName(u"label")
         font = QFont()
         font.setPointSize(36)
@@ -36,13 +36,13 @@ class Ui_settingPageFrame(object):
         self.horizontalLayout.addWidget(self.label)
 
 
-        self.retranslateUi(settingPageFrame)
+        self.retranslateUi(decryptPageFrame)
 
-        QMetaObject.connectSlotsByName(settingPageFrame)
+        QMetaObject.connectSlotsByName(decryptPageFrame)
     # setupUi
 
-    def retranslateUi(self, settingPageFrame):
-        settingPageFrame.setWindowTitle(QCoreApplication.translate("settingPageFrame", u"Frame", None))
-        self.label.setText(QCoreApplication.translate("settingPageFrame", u"\u8bbe\u7f6e", None))
+    def retranslateUi(self, decryptPageFrame):
+        decryptPageFrame.setWindowTitle(QCoreApplication.translate("decryptPageFrame", u"Frame", None))
+        self.label.setText(QCoreApplication.translate("decryptPageFrame", u"XM\u89e3\u5bc6", None))
     # retranslateUi
 

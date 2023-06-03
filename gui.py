@@ -23,7 +23,7 @@ from qfluentwidgets import (NavigationInterface, NavigationItemPosition, Navigat
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
-from view.DecryptPage_ui import Ui
+from view.DecryptPage_ui import Ui_decryptPageFrame
 from view.DownloadPage_ui import Ui_downloadPageFrame
 from view.FrontPage_ui import Ui_frontPageFrame
 from view.SettingPage_ui import Ui_settingPageFrame
