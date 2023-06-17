@@ -14,12 +14,13 @@
 '''
 import sys
 from typing import Optional
+from enum import Enum
 from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont
 from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QLabel, QHeaderView
 
 from qfluentwidgets import (NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
-                            isDarkTheme, setTheme, Theme, setThemeColor, qrouter)
+                            isDarkTheme, setTheme, Theme, setThemeColor, qrouter, FluentIconBase)
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
@@ -27,6 +28,7 @@ from view.DecryptPage_ui import Ui_decryptPageFrame
 from view.DownloadPage_ui import Ui_downloadPageFrame
 from view.FrontPage_ui import Ui_frontPageFrame
 from view.SettingPage_ui import Ui_settingPageFrame
+import resource.resource_rc
 
 
 class FrontPageFrame(QFrame, Ui_frontPageFrame):
@@ -70,12 +72,19 @@ class SettingPageFrame(QFrame, Ui_settingPageFrame):
         self.setupUi(self)
 
 
+class Icon(FluentIconBase, Enum):
+    LOCK = "lock"
+
+    def path(self, theme=Theme.AUTO):
+        return f":/{self.value}.svg"
+
+
 class AvatarWidget(NavigationWidget):
     """ Avatar widget """
 
     def __init__(self, parent=None):
         super().__init__(isSelectable=False, parent=parent)
-        self.avatar = QImage('resource/shoko.png').scaled(
+        self.avatar = QImage(':/shoko.png').scaled(
             24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
     def paintEvent(self, e):
@@ -148,7 +157,7 @@ class Window(FramelessWindow):
     def initNavigation(self):
         self.addSubInterface(self.frontPageInterface, FIF.HOME, '首页')
         self.addSubInterface(self.downloadPageInterface, FIF.DOWNLOAD, '下载列表')
-        self.addSubInterface(self.decryptPageInterface, FIF.UNPIN, 'XM解密')
+        self.addSubInterface(self.decryptPageInterface, Icon.LOCK, 'XM解密')
 
         self.navigationInterface.addWidget(
             routeKey='avatar',
@@ -171,7 +180,7 @@ class Window(FramelessWindow):
 
     def initWindow(self):
         self.resize(900, 700)
-        self.setWindowIcon(QIcon('resource/icon.png'))
+        self.setWindowIcon(QIcon(':/icon.png'))
         self.setWindowTitle('Ximalaya-Downloader')
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
 
@@ -179,7 +188,6 @@ class Window(FramelessWindow):
         w, h = desktop.width(), desktop.height()
         self.move(w//2 - self.width()//2, h//2 - self.height()//2)
 
-        self.setQss()
 
     def addSubInterface(self, interface, icon, text: str, position=NavigationItemPosition.TOP, parent=None):
         """ add sub interface """
@@ -193,11 +201,6 @@ class Window(FramelessWindow):
             tooltip=text,
             parentRouteKey=parent.objectName() if parent else None
         )
-
-    def setQss(self):
-        color = 'dark' if isDarkTheme() else 'light'
-        with open(f'resource/{color}/demo.qss', encoding='utf-8') as f:
-            self.setStyleSheet(f.read())
 
     def switchTo(self, widget):
         self.stackWidget.setCurrentWidget(widget)
