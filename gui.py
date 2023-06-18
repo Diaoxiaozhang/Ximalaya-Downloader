@@ -4,10 +4,10 @@ from typing import Optional
 from enum import Enum
 from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont
-from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QLabel, QHeaderView
+from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QHeaderView
 
 from qfluentwidgets import (NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
-                            isDarkTheme, setTheme, Theme, setThemeColor, qrouter, FluentIconBase)
+                            Theme, qrouter, FluentIconBase)
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
@@ -38,7 +38,6 @@ class FrontPageFrame(QFrame, Ui_frontPageFrame):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.initTable()
-
 
 
 class DownloadPageFrame(QFrame, Ui_downloadPageFrame):
@@ -86,8 +85,7 @@ class AvatarWidget(NavigationWidget):
 
         # draw background
         if self.isEnter:
-            c = 255 if isDarkTheme() else 0
-            painter.setBrush(QColor(c, c, c, 10))
+            painter.setBrush(QColor(0, 0, 0, 10))
             painter.drawRoundedRect(self.rect(), 5, 5)
 
         # draw avatar
@@ -97,7 +95,7 @@ class AvatarWidget(NavigationWidget):
         painter.translate(-8, -6)
 
         if not self.isCompacted:
-            painter.setPen(Qt.white if isDarkTheme() else Qt.black)
+            painter.setPen(Qt.black)
             font = QFont('Segoe UI')
             font.setPixelSize(14)
             painter.setFont(font)
@@ -109,12 +107,6 @@ class Window(FramelessWindow):
     def __init__(self):
         super().__init__()
         self.setTitleBar(StandardTitleBar(self))
-
-        # use dark theme mode
-        # setTheme(Theme.DARK)
-
-        # change the theme color
-        # setThemeColor('#0078d4')
 
         self.hBoxLayout = QHBoxLayout(self)
         self.navigationInterface = NavigationInterface(self, showMenuButton=True)
