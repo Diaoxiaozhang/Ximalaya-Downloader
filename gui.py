@@ -2,12 +2,12 @@
 import sys
 from typing import Optional
 from enum import Enum
-from PySide6.QtCore import Qt, QRect
-from PySide6.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont
-from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QHeaderView
+from PySide6.QtCore import Qt, QRect, QPoint
+from PySide6.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont, QAction
+from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QHeaderView, QTableWidgetItem
 
 from qfluentwidgets import (NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
-                            Theme, qrouter, FluentIconBase)
+                            Theme, FluentIconBase, RoundMenu, Action, MenuAnimationType)
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
@@ -23,10 +23,12 @@ class FrontPageFrame(QFrame, Ui_frontPageFrame):
         super().__init__(parent=parent)
         self.setupUi(self)
         self.initTable()
+        self.TableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.TableWidget.customContextMenuRequested.connect(self.contextMenuEvent)
     
     def initTable(self):
         self.TableWidget.verticalHeader().setVisible(False)
-        column_widths = [2, 2, 1, 1]
+        column_widths = [1, 4, 4, 2]
         total_width = sum(column_widths)
         self.TableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table_width = self.TableWidget.width()
@@ -38,12 +40,44 @@ class FrontPageFrame(QFrame, Ui_frontPageFrame):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.initTable()
+    
+    def contextMenuEvent(self, e):
+        row = self.TableWidget.rowAt(e.y())
+        self.TableWidget.selectRow(row)
+        menu = RoundMenu(parent=self)
+        menu.addAction(Action(FIF.DOWNLOAD, '下载'))
+        menu.exec_(self.mapToGlobal(e) + QPoint(10, 95), aniType=MenuAnimationType.FADE_IN_PULL_UP)
 
 
 class DownloadPageFrame(QFrame, Ui_downloadPageFrame):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.initTable()
+        self.TableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.TableWidget.customContextMenuRequested.connect(self.contextMenuEvent)
+    
+    def initTable(self):
+        self.TableWidget.verticalHeader().setVisible(False)
+        column_widths = [2, 2, 1, 1, 1]
+        total_width = sum(column_widths)
+        self.TableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table_width = self.TableWidget.width()
+        self.TableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Custom)
+        for col, width in enumerate(column_widths):
+            relative_width = width / total_width
+            self.TableWidget.horizontalHeader().resizeSection(col, relative_width * table_width)
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.initTable()
+    
+    def contextMenuEvent(self, e):
+        row = self.TableWidget.rowAt(e.y())
+        self.TableWidget.selectRow(row)
+        menu = RoundMenu(parent=self)
+        menu.addAction(Action(FIF.DOCUMENT, '打开'))
+        menu.addAction(Action(FIF.FOLDER, '在资源管理器中打开'))
+        menu.exec_(self.mapToGlobal(e) + QPoint(10, 55), aniType=MenuAnimationType.FADE_IN_PULL_UP)
 
 
 class DecryptPageFrame(QFrame, Ui_decryptPageFrame):

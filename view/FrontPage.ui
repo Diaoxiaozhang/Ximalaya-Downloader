@@ -51,31 +51,6 @@
      <property name="selectionMode">
       <enum>QAbstractItemView::NoSelection</enum>
      </property>
-     <row>
-      <property name="text">
-       <string>test</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>test</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>test</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>test</string>
-      </property>
-     </row>
-     <row>
-      <property name="text">
-       <string>test</string>
-      </property>
-     </row>
      <column>
       <property name="text">
        <string>序号</string>
@@ -96,11 +71,6 @@
        <string>时长</string>
       </property>
      </column>
-     <item row="0" column="0">
-      <property name="text">
-       <string/>
-      </property>
-     </item>
     </widget>
    </item>
    <item>

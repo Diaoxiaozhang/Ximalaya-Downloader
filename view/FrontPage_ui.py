@@ -55,20 +55,6 @@ class Ui_frontPageFrame(object):
         self.TableWidget.setHorizontalHeaderItem(2, __qtablewidgetitem2)
         __qtablewidgetitem3 = QTableWidgetItem()
         self.TableWidget.setHorizontalHeaderItem(3, __qtablewidgetitem3)
-        if (self.TableWidget.rowCount() < 5):
-            self.TableWidget.setRowCount(5)
-        __qtablewidgetitem4 = QTableWidgetItem()
-        self.TableWidget.setVerticalHeaderItem(0, __qtablewidgetitem4)
-        __qtablewidgetitem5 = QTableWidgetItem()
-        self.TableWidget.setVerticalHeaderItem(1, __qtablewidgetitem5)
-        __qtablewidgetitem6 = QTableWidgetItem()
-        self.TableWidget.setVerticalHeaderItem(2, __qtablewidgetitem6)
-        __qtablewidgetitem7 = QTableWidgetItem()
-        self.TableWidget.setVerticalHeaderItem(3, __qtablewidgetitem7)
-        __qtablewidgetitem8 = QTableWidgetItem()
-        self.TableWidget.setVerticalHeaderItem(4, __qtablewidgetitem8)
-        __qtablewidgetitem9 = QTableWidgetItem()
-        self.TableWidget.setItem(0, 0, __qtablewidgetitem9)
         self.TableWidget.setObjectName(u"TableWidget")
         font = QFont()
         font.setPointSize(9)
@@ -176,21 +162,6 @@ class Ui_frontPageFrame(object):
         ___qtablewidgetitem2.setText(QCoreApplication.translate("frontPageFrame", u"\u4e13\u8f91\u540d", None));
         ___qtablewidgetitem3 = self.TableWidget.horizontalHeaderItem(3)
         ___qtablewidgetitem3.setText(QCoreApplication.translate("frontPageFrame", u"\u65f6\u957f", None));
-        ___qtablewidgetitem4 = self.TableWidget.verticalHeaderItem(0)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("frontPageFrame", u"test", None));
-        ___qtablewidgetitem5 = self.TableWidget.verticalHeaderItem(1)
-        ___qtablewidgetitem5.setText(QCoreApplication.translate("frontPageFrame", u"test", None));
-        ___qtablewidgetitem6 = self.TableWidget.verticalHeaderItem(2)
-        ___qtablewidgetitem6.setText(QCoreApplication.translate("frontPageFrame", u"test", None));
-        ___qtablewidgetitem7 = self.TableWidget.verticalHeaderItem(3)
-        ___qtablewidgetitem7.setText(QCoreApplication.translate("frontPageFrame", u"test", None));
-        ___qtablewidgetitem8 = self.TableWidget.verticalHeaderItem(4)
-        ___qtablewidgetitem8.setText(QCoreApplication.translate("frontPageFrame", u"test", None));
-
-        __sortingEnabled = self.TableWidget.isSortingEnabled()
-        self.TableWidget.setSortingEnabled(False)
-        self.TableWidget.setSortingEnabled(__sortingEnabled)
-
         self.CheckBox.setText(QCoreApplication.translate("frontPageFrame", u"\u6587\u4ef6\u540d\u6dfb\u52a0\u5e8f\u53f7", None))
         self.label_2.setText(QCoreApplication.translate("frontPageFrame", u"\u4ece\u7b2c", None))
         self.label.setText(QCoreApplication.translate("frontPageFrame", u"\u96c6\u5230\u7b2c", None))
