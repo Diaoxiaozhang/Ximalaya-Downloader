@@ -1,17 +1,4 @@
 # coding:utf-8
-'''
-这是一个使用PySide6库编写的Python应用程序，用于创建一个具有侧边导航栏和多个可切换页面的无边框窗口。代码的主要部分包括：
- 1. 导入所需的库和模块。
-2. 定义不同的子界面（如 FrontPageFrame, DownloadPageFrame, DecryptPageFrame, SettingPageFrame），这些子界面都继承自 QFrame。
-3. 创建 AvatarWidget 类，绘制带有头像的自定义导航窗口部件。
-4. 定义 Window 类，继承自 FramelessWindow，设置窗口大小、标题栏和侧边导航栏。
-5. 初始化用户界面布局、导航栏选项以及窗口设置。
-6. 使用 addSubInterface 方法将子界面添加到导航栏。
-7. 使用 QStackedWidget 切换不同的子界面。
-8. 连接信号和槽（如当当前界面改变时，调用 onCurrentInterfaceChanged 方法）。
-9. 在点击 AvatarWidget 时调用 showMessageBox 方法，显示一个消息框。
- 应用程序的界面包括主页、下载列表、XM解密和设置等页面，可以通过点击侧边栏的选项在这些页面之间进行切换。
-'''
 import sys
 from typing import Optional
 from enum import Enum
