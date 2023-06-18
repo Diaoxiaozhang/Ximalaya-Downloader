@@ -24,7 +24,7 @@ class FrontPageFrame(QFrame, Ui_frontPageFrame):
         self.setupUi(self)
         self.initTable()
         self.TableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.TableWidget.customContextMenuRequested.connect(self.contextMenuEvent)
+        self.TableWidget.customContextMenuRequested.connect(self.contextMenuEvent_)
     
     def initTable(self):
         self.TableWidget.verticalHeader().setVisible(False)
@@ -41,7 +41,7 @@ class FrontPageFrame(QFrame, Ui_frontPageFrame):
         super().resizeEvent(event)
         self.initTable()
     
-    def contextMenuEvent(self, e):
+    def contextMenuEvent_(self, e):
         row = self.TableWidget.rowAt(e.y())
         self.TableWidget.selectRow(row)
         menu = RoundMenu(parent=self)
@@ -55,7 +55,7 @@ class DownloadPageFrame(QFrame, Ui_downloadPageFrame):
         self.setupUi(self)
         self.initTable()
         self.TableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.TableWidget.customContextMenuRequested.connect(self.contextMenuEvent)
+        self.TableWidget.customContextMenuRequested.connect(self.contextMenuEvent_)
     
     def initTable(self):
         self.TableWidget.verticalHeader().setVisible(False)
@@ -71,7 +71,7 @@ class DownloadPageFrame(QFrame, Ui_downloadPageFrame):
         super().resizeEvent(event)
         self.initTable()
     
-    def contextMenuEvent(self, e):
+    def contextMenuEvent_(self, e):
         row = self.TableWidget.rowAt(e.y())
         self.TableWidget.selectRow(row)
         menu = RoundMenu(parent=self)
