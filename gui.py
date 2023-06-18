@@ -7,7 +7,7 @@ from PySide6.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont, QActio
 from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel
 
 from qfluentwidgets import (NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
-                            Theme, FluentIconBase, RoundMenu, Action, MenuAnimationType)
+                            Theme, FluentIconBase, RoundMenu, Action, MenuAnimationType, ScrollArea)
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
@@ -86,10 +86,21 @@ class DecryptPageFrame(QFrame, Ui_decryptPageFrame):
         self.setupUi(self)
 
 
-class SettingPageFrame(QFrame, Ui_settingPageFrame):
+class SettingPageFrame(ScrollArea, Ui_settingPageFrame):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setupUi(self)
+        self.resize(850, 659)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setViewportMargins(0, 80, 0, 20)
+        self.setWidget(self.scrollWidget)
+        self.setWidgetResizable(True)
+        self.setStyleSheet('QScrollArea{border: none;}')
+        self.settingLabel.move(36, 30)
+        self.expandLayout.setSpacing(28)
+        self.expandLayout.setContentsMargins(36, 10, 36, 0)
+        self.expandLayout.addWidget(self.downloadGroup)
+        self.expandLayout.addWidget(self.aboutGroup)
 
 
 class Icon(FluentIconBase, Enum):
