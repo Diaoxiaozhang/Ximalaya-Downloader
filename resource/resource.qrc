@@ -4,5 +4,6 @@
         <file>icon.png</file>
         <file>lock.svg</file>
         <file>shoko.png</file>
+        <file>gift.svg</file>
     </qresource>
 </RCC>

@@ -4,7 +4,7 @@ from typing import Optional
 from enum import Enum
 from PySide6.QtCore import Qt, QRect, QPoint
 from PySide6.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont, QAction
-from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QHeaderView, QTableWidgetItem
+from PySide6.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QHeaderView, QTableWidgetItem, QLabel
 
 from qfluentwidgets import (NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
                             Theme, FluentIconBase, RoundMenu, Action, MenuAnimationType)
