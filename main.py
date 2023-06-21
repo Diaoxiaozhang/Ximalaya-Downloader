@@ -13,6 +13,12 @@ import traceback
 import aiofiles
 import aiohttp
 import requests
+import http.cookiejar as cookielib
+import matplotlib.pyplot as plt
+import matplotlib.image as imglib
+from urllib import parse
+from io import BytesIO
+from base64 import b64decode
 from Crypto.Cipher import AES
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
@@ -21,6 +27,10 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import selenium.common.exceptions
 import colorama
+import urllib3
+
+# 忽略警告
+urllib3.disable_warnings()
 
 colorama.init(autoreset=True)
 logger = logging.getLogger('logger')
@@ -323,6 +333,7 @@ class Ximalaya:
         print("请输入登录方式：")
         print("1. 在浏览器中登录并自动提取cookie")
         print("2. 手动输入cookie")
+        print("3. 喜马拉雅APP扫码授权登录")
         choice = input()
         if choice == "1":
             print("请选择浏览器：")
@@ -381,6 +392,45 @@ class Ximalaya:
             else:
                 print("cookie无效，将返回主菜单，建议使用方法1自动获取cookie！")
                 return
+        elif choice == "3":
+            session = requests.session()
+            session.cookies = cookielib.LWPCookieJar()
+            qr_code_url = f'https://passport.ximalaya.com/web/qrCode/gen?level=L&{parse.urlencode({"source": "喜马拉雅网页端"})}'
+            response = session.get(qr_code_url, verify=False)
+            if response.status_code != 200:
+                print('获取登录二维码失败，请检查网络')
+                return None
+            else:
+                data = response.json()
+                if data['ret'] != 0:
+                    print('获取登录二维码失败，请检查网络')
+                    return None
+                else:
+                    img = imglib.imread(BytesIO(b64decode(data['img'])))
+                    plt.imshow(img)
+                    plt.show(block=False)
+
+            qrId = data['qrId']
+            url = 'https://passport.ximalaya.com/web/qrCode/check/%s/%s' % (qrId, int(time.time() * 1000))
+            while True:
+                response = session.get(url, verify=False)
+                data = response.json()
+                if data['ret'] == 0:
+                    cookies = session.cookies
+                    cookie = ''
+                    for cookie_ in cookies:
+                        cookie += f"{cookie_.name}={cookie_.value}; "
+                    with open("config.json", "r", encoding="utf-8") as f:
+                        config = json.load(f)
+                    config["cookie"] = cookie
+                    with open("config.json", "w", encoding="utf-8") as f:
+                        json.dump(config, f)
+                    plt.close()
+                    break
+                plt.pause(1)
+        else:
+            print("输入错误，将返回主菜单！")
+            return
         username = self.judge_cookie(cookie)
         print(f"成功登录账号{username}！")
 

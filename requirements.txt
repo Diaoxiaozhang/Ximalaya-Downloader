@@ -5,3 +5,5 @@ pycryptodome
 requests
 selenium
 webdriver_manager
+matplotlib
+urllib3
