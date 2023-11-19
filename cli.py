@@ -1,14 +1,17 @@
 import main
-from main import path
 import asyncio
 import re
 import requests
 import os
 import time
+import argparse
 
 
 ximalaya = main.Ximalaya()
 loop = asyncio.get_event_loop()
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-s', '--sound', type=int, help='')
 
 
 if __name__ == "__main__":
@@ -100,10 +103,10 @@ if __name__ == "__main__":
                     choice = "1"
                 if choice == "0" or choice == "1":
                     ximalaya.get_sound(
-                        sound_info["name"], sound_info[int(choice)])
+                        sound_info["name"], sound_info[int(choice)], path)
                     break
                 elif choice == "2" and sound_info[2] != "":
-                    ximalaya.get_sound(sound_info["name"], sound_info[2])
+                    ximalaya.get_sound(sound_info["name"], sound_info[2], path)
                     break
                 else:
                     print("输入有误，请重新输入！")
@@ -187,7 +190,7 @@ if __name__ == "__main__":
                                 choice = "1"
                             if choice == "0" or choice == "1" or choice == "2":
                                 loop.run_until_complete(ximalaya.get_selected_sounds(
-                                    sounds, album_name, start, end, headers, int(choice), number))
+                                    sounds, album_name, start, end, headers, int(choice), number, path))
                                 break
                             else:
                                 print("输入有误，请重新输入！")

@@ -22,8 +22,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import selenium.common.exceptions
 import colorama
 
-VERSION = "v1.0.0-alpha"
-
 colorama.init(autoreset=True)
 logger = logging.getLogger('logger')
 logger.setLevel(logging.DEBUG)
@@ -154,7 +152,7 @@ class Ximalaya:
         return name
 
     # 下载单个声音
-    def get_sound(self, sound_name, sound_url):
+    def get_sound(self, sound_name, sound_url, path):
         retries = 3
         sound_name = self.replace_invalid_chars(sound_name)
         if os.path.exists(f"{path}/{sound_name}.m4a"):
@@ -182,7 +180,7 @@ class Ximalaya:
         logger.debug(f'{sound_name}下载完成！')
 
     # 协程下载声音
-    async def async_get_sound(self, sound_name, sound_url, album_name, session, num=None):
+    async def async_get_sound(self, sound_name, sound_url, album_name, session, path, num=None):
         retries = 3
         logger.debug(f'开始下载声音{sound_name}')
         if num is None:
@@ -213,7 +211,7 @@ class Ximalaya:
             logger.debug(f'{sound_name}经过三次重试后下载失败！')
 
     # 下载专辑中的选定声音
-    async def get_selected_sounds(self, sounds, album_name, start, end, headers, quality, number):
+    async def get_selected_sounds(self, sounds, album_name, start, end, headers, quality, number, path):
         tasks = []
         session = aiohttp.ClientSession()
         digits = len(str(len(sounds)))
@@ -230,7 +228,7 @@ class Ximalaya:
                 num_ = str(num).zfill(digits)
                 if quality == 2 and sound_info[2] == "":
                     quality = 1
-                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, num_)))
+                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, path, num_)))
                 num += 1
         else:
             for sound_info in sounds_info:
@@ -238,7 +236,7 @@ class Ximalaya:
                     continue
                 if quality == 2 and sound_info[2] == "":
                     quality = 1
-                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session)))
+                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, path)))
         await asyncio.wait(tasks)
         await session.close()
         print("专辑全部选定声音下载完成！")
@@ -300,7 +298,6 @@ class Ximalaya:
             config["path"] = ""
             with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
-            path = False
         return cookie, path
 
     # 判断cookie是否有效
