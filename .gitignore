@@ -145,3 +145,6 @@ pylint.conf
 
 # initialize
 initialize.sh
+
+# vscode
+.vscode/
