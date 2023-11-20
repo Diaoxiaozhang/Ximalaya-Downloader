@@ -193,7 +193,6 @@ class Ximalaya:
             os.makedirs(f"{path}/{album_name}")
         if os.path.exists(f"{path}/{album_name}/{sound_name}.m4a"):
             print(f'{sound_name}已存在！')
-        print(f"{path}")
         while retries > 0:
             try:
                 async with session.get(sound_url, headers=self.default_headers, timeout=120) as response:

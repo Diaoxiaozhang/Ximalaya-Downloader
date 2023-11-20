@@ -3,5 +3,5 @@ aiohttp
 colorama
 pycryptodome
 requests
-selenium
+selenium==4.9.0
 webdriver_manager
