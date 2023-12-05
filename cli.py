@@ -22,14 +22,11 @@ if __name__ == "__main__":
     else:
         username = ximalaya.judge_cookie(cookie)
     if os.path.isdir(path):
-        print(
-            f"检测到已设置下载路径为{path}，如果想要修改下载路径，请修改config.json文件中的path字段，将path字段删除或者将值设置为空字符串可恢复默认下载路径")
+        print(f"检测到已设置下载路径为{path}，如果想要修改下载路径，请修改config.json文件中的path字段，将path字段删除或者将值设置为空字符串可恢复默认下载路径")
     else:
-        print(
-            '在config文件中未检测到有效的下载路径，将使用默认下载路径，如果想要修改下载路径，请修改config.json文件中的path字段为你想要的下载路径')
+        print('在config文件中未检测到有效的下载路径，将使用默认下载路径，如果想要修改下载路径，请修改config.json文件中的path字段为你想要的下载路径')
         path = './download'
-    response = requests.get(f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}?device=web&trackId=188017958&trackQualityLevel=1",
-                            headers=ximalaya.default_headers)
+    response = requests.get(f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}?device=web&trackId=188017958&trackQualityLevel=1",headers=ximalaya.default_headers)
     if response.json()["ret"] == 927 and not username:
         print("检测到当前ip不在中国大陆，由于喜马拉雅官方限制，必须登录才能继续使用，将自动跳转到登录流程")
         ximalaya.login()
@@ -78,8 +75,7 @@ if __name__ == "__main__":
                 sound_id = int(_)
             except ValueError:
                 try:
-                    sound_id = re.search(
-                        r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
+                    sound_id = re.search(r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
@@ -102,8 +98,7 @@ if __name__ == "__main__":
                 if choice == "":
                     choice = "1"
                 if choice == "0" or choice == "1":
-                    ximalaya.get_sound(
-                        sound_info["name"], sound_info[int(choice)], path)
+                    ximalaya.get_sound(sound_info["name"], sound_info[int(choice)], path)
                     break
                 elif choice == "2" and sound_info[2] != "":
                     ximalaya.get_sound(sound_info["name"], sound_info[2], path)
@@ -117,8 +112,7 @@ if __name__ == "__main__":
                 album_id = int(input_album)
             except ValueError:
                 try:
-                    album_id = re.search(
-                        r"ximalaya.com/album/(?P<album_id>\d+)", input_album).group('album_id')
+                    album_id = re.search(r"ximalaya.com/album/(?P<album_id>\d+)", input_album).group('album_id')
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
@@ -129,15 +123,12 @@ if __name__ == "__main__":
             if album_type == 0:
                 print(f"成功解析免费专辑{album_id}，专辑名{album_name}，共{len(sounds)}个声音")
             elif album_type == 1:
-                print(
-                    f"成功解析已购付费专辑{album_id}，专辑名{album_name}，共{len(sounds)}个声音")
+                print(f"成功解析已购付费专辑{album_id}，专辑名{album_name}，共{len(sounds)}个声音")
             elif album_type == 2:
                 if logined is True:
-                    print(
-                        f"成功解析付费专辑{album_id}，专辑名{album_name}，但是当前登陆账号未购买此专辑或未开通vip")
+                    print(f"成功解析付费专辑{album_id}，专辑名{album_name}，但是当前登陆账号未购买此专辑或未开通vip")
                 else:
-                    print(
-                        f"成功解析付费专辑{album_id}，专辑名{album_name}，但是当前未登陆账号，请登录再尝试下载")
+                    print(f"成功解析付费专辑{album_id}，专辑名{album_name}，但是当前未登陆账号，请登录再尝试下载")
                 continue
             else:
                 continue
@@ -189,8 +180,7 @@ if __name__ == "__main__":
                             if choice == "":
                                 choice = "1"
                             if choice == "0" or choice == "1" or choice == "2":
-                                loop.run_until_complete(ximalaya.get_selected_sounds(
-                                    sounds, album_name, start, end, headers, int(choice), number, path))
+                                loop.run_until_complete(ximalaya.get_selected_sounds(sounds, album_name, start, end, headers, int(choice), number, path))
                                 break
                             else:
                                 print("输入有误，请重新输入！")

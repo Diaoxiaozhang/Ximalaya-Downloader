@@ -69,9 +69,9 @@ class Ximalaya:
         for encrypted_url in encrypted_url_list:
             if encrypted_url["type"] == "M4A_128":
                 sound_info[2] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "M4A_64":
+            elif encrypted_url["type"] == "MP3_64":
                 sound_info[1] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "M4A_24":
+            elif encrypted_url["type"] == "MP3_32":
                 sound_info[0] = self.decrypt_url(encrypted_url["url"])
         logger.debug(f'ID为{sound_id}的声音解析成功！')
         return sound_info
@@ -136,9 +136,9 @@ class Ximalaya:
         for encrypted_url in encrypted_url_list:
             if encrypted_url["type"] == "M4A_128":
                 sound_info[2] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "M4A_64":
+            elif encrypted_url["type"] == "MP3_64":
                 sound_info[1] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "M4A_24":
+            elif encrypted_url["type"] == "MP3_32":
                 sound_info[0] = self.decrypt_url(encrypted_url["url"])
         logger.debug(f'ID为{sound_id}的声音解析成功！')
         return sound_info
@@ -155,7 +155,11 @@ class Ximalaya:
     def get_sound(self, sound_name, sound_url, path):
         retries = 3
         sound_name = self.replace_invalid_chars(sound_name)
-        if os.path.exists(f"{path}/{sound_name}.m4a"):
+        if '?' in sound_url:
+            type = sound_url.split('?')[0][-3:]
+        else:
+            type = sound_url[-3:]
+        if os.path.exists(f"{path}/{sound_name}.{type}"):
             print(f'{sound_name}已存在！')
             return
         while retries > 0:
@@ -174,7 +178,7 @@ class Ximalaya:
         sound_file = response.content
         if not os.path.exists(path):
             os.makedirs(path)
-        with open(f"{path}/{sound_name}.m4a", mode="wb") as f:
+        with open(f"{path}/{sound_name}.{type}", mode="wb") as f:
             f.write(sound_file)
         print(f'{sound_name}下载完成！')
         logger.debug(f'{sound_name}下载完成！')
@@ -188,15 +192,19 @@ class Ximalaya:
         else:
             sound_name = f"{num}-{sound_name}"
             sound_name = self.replace_invalid_chars(sound_name)
+        if '?' in sound_url:
+            type = sound_url.split('?')[0][-3:]
+        else:
+            type = sound_url[-3:]
         album_name = self.replace_invalid_chars(album_name)
         if not os.path.exists(f"{path}/{album_name}"):
             os.makedirs(f"{path}/{album_name}")
-        if os.path.exists(f"{path}/{album_name}/{sound_name}.m4a"):
+        if os.path.exists(f"{path}/{album_name}/{sound_name}.{type}"):
             print(f'{sound_name}已存在！')
         while retries > 0:
             try:
                 async with session.get(sound_url, headers=self.default_headers, timeout=120) as response:
-                    async with aiofiles.open(f"{path}/{album_name}/{sound_name}.m4a", mode="wb") as f:
+                    async with aiofiles.open(f"{path}/{album_name}/{sound_name}.{type}", mode="wb") as f:
                         await f.write(await response.content.read())
                 print(f'{sound_name}下载完成！')
                 logger.debug(f'{sound_name}下载完成！')
