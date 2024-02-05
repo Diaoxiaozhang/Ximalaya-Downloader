@@ -184,7 +184,7 @@ class Ximalaya:
         logger.debug(f'{sound_name}下载完成！')
 
     # 协程下载声音
-    async def async_get_sound(self, sound_name, sound_url, album_name, session, path, num=None):
+    async def async_get_sound(self, sound_name, sound_url, album_name, session, path, global_retries, num=None):
         retries = 3
         logger.debug(f'开始下载声音{sound_name}')
         if num is None:
@@ -201,6 +201,7 @@ class Ximalaya:
             os.makedirs(f"{path}/{album_name}")
         if os.path.exists(f"{path}/{album_name}/{sound_name}.{type}"):
             print(f'{sound_name}已存在！')
+            return None
         while retries > 0:
             try:
                 async with session.get(sound_url, headers=self.default_headers, timeout=120) as response:
@@ -210,16 +211,17 @@ class Ximalaya:
                 logger.debug(f'{sound_name}下载完成！')
                 break
             except Exception as e:
-                logger.debug(f'{sound_name}第{4 - retries}次下载失败！')
+                logger.debug(f'{sound_name}第{global_retries * 3 + 4 - retries}次下载失败！')
                 logger.debug(traceback.format_exc())
                 retries -= 1
         if retries == 0:
-            print(colorama.Fore.RED + f'{sound_name}下载失败！')
-            logger.debug(f'{sound_name}经过三次重试后下载失败！')
+            return ([sound_name, sound_url, album_name, session, path, global_retries, num])
 
     # 下载专辑中的选定声音
     async def get_selected_sounds(self, sounds, album_name, start, end, headers, quality, number, path):
         tasks = []
+        global_retries = 0
+        max_global_retries = 2
         session = aiohttp.ClientSession()
         digits = len(str(len(sounds)))
         for i in range(start - 1, end):
@@ -234,8 +236,9 @@ class Ximalaya:
                     continue
                 num_ = str(num).zfill(digits)
                 if quality == 2 and sound_info[2] == "":
-                    quality = 1
-                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, path, num_)))
+                     quality = 1
+                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, path, global_retries, num_)))
+                print(sound_info["name"], sound_info[quality], album_name, session, path, global_retries, num_)
                 num += 1
         else:
             for sound_info in sounds_info:
@@ -243,10 +246,14 @@ class Ximalaya:
                     continue
                 if quality == 2 and sound_info[2] == "":
                     quality = 1
-                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, path)))
-        await asyncio.wait(tasks)
-        await session.close()
+                tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, path, global_retries)))
+        failed_downloads = [result for result in await asyncio.gather(*tasks) if result is not None]
+        while failed_downloads and global_retries < max_global_retries:
+            tasks = [asyncio.create_task(self.async_get_sound(*failed_download)) for failed_download in failed_downloads]
+            failed_downloads = [result for result in await asyncio.gather(*tasks) if result is not None]
+            global_retries += 1
         print("专辑全部选定声音下载完成！")
+        await session.close()
 
     # 解密vip声音url
     def decrypt_url(self, ciphertext):
