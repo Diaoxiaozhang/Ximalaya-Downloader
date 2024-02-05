@@ -253,6 +253,9 @@ class Ximalaya:
             failed_downloads = [result for result in await asyncio.gather(*tasks) if result is not None]
             global_retries += 1
         print("专辑全部选定声音下载完成！")
+        if failed_downloads:
+            for failed_download in failed_downloads:
+                print(colorama.Fore.RED + f'声音{failed_download[0]}下载失败！')
         await session.close()
 
     # 解密vip声音url
