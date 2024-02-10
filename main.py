@@ -238,7 +238,6 @@ class Ximalaya:
                 if quality == 2 and sound_info[2] == "":
                      quality = 1
                 tasks.append(asyncio.create_task(self.async_get_sound(sound_info["name"], sound_info[quality], album_name, session, path, global_retries, num_)))
-                print(sound_info["name"], sound_info[quality], album_name, session, path, global_retries, num_)
                 num += 1
         else:
             for sound_info in sounds_info:
