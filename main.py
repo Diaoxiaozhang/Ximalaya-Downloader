@@ -214,6 +214,8 @@ class Ximalaya:
                 logger.debug(f'{sound_name}第{global_retries * 3 + 4 - retries}次下载失败！')
                 logger.debug(traceback.format_exc())
                 retries += 1
+                if os.path.exists(f"{path}/{album_name}/{sound_name}.{type}"):
+                    os.remove(f"{path}/{album_name}/{sound_name}.{type}")
         if retries == 0:
             return ([sound_name, sound_url, album_name, session, path, global_retries, num])
 
