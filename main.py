@@ -55,6 +55,11 @@ class Ximalaya:
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
             return False
+        try:
+            not response.json()["trackInfo"]["isAuthorized"]
+        except KeyError:
+            print('解析失败，可能达到每日下载上限')
+            return False
         if not response.json()["trackInfo"]["isAuthorized"]:
             return 0  # 未购买或未登录vip账号
         try:
