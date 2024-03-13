@@ -75,7 +75,7 @@ if __name__ == "__main__":
                 sound_id = int(_)
             except ValueError:
                 try:
-                    sound_id = re.search(r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
+                    sound_id = re.search(r"sound/(?P<sound_id>\d+)", _).group('sound_id')
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
@@ -112,7 +112,7 @@ if __name__ == "__main__":
                 album_id = int(input_album)
             except ValueError:
                 try:
-                    album_id = re.search(r"ximalaya.com/album/(?P<album_id>\d+)", input_album).group('album_id')
+                    album_id = re.search(r"album/(?P<album_id>\d+)", input_album).group('album_id')
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
