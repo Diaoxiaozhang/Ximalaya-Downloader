@@ -75,17 +75,7 @@ if __name__ == "__main__":
                 sound_id = int(_)
             except ValueError:
                 try:
-#                    sound_id = re.search(r"ximalaya.com/sound/(?P<sound_id>\d+)", _).group('sound_id')
-                    match = re.search(r"ximalaya.com/sound/(?P<sound_id>\d+)", _)
-                    if match:
-                        sound_id = match.group('sound_id')
-                    else:
-                        match = re.search(r"sound/(\d+)", _)
-                        if match:
-                            sound_id = match.group(1)
-                        else:
-                            raise ValueError("无效的URL")  # 如果两个正则都没有匹配到，手动抛出一个异常。
-
+                    sound_id = re.search(r"sound/(?P<sound_id>\d+)", _).group('sound_id')
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
@@ -122,18 +112,7 @@ if __name__ == "__main__":
                 album_id = int(input_album)
             except ValueError:
                 try:
-#                    album_id = re.search(r"ximalaya.com/album/(?P<album_id>\d+)", input_album).group('album_id')
-                    match = re.search(r"ximalaya.com/album/(?P<album_id>\d+)", input_album)
-                    if match:
-                        album_id = match.group('album_id')
-                    else:
-                        match = re.search(r"album/(\d+)", input_album)
-                        if match:
-                            album_id = match.group(1)
-                        else:
-                            raise ValueError("无效的URL")  # 如果两个正则都没有匹配到，手动抛出一个异常。
-
-
+                    album_id = re.search(r"album/(?P<album_id>\d+)", input_album).group('album_id')
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
