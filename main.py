@@ -141,6 +141,10 @@ class Ximalaya:
         for encrypted_url in encrypted_url_list:
             if encrypted_url["type"] == "M4A_128":
                 sound_info[2] = self.decrypt_url(encrypted_url["url"])
+            elif encrypted_url["type"] == "M4A_64":
+                sound_info[1] = self.decrypt_url(encrypted_url["url"])
+            elif encrypted_url["type"] == "M4A_24":
+                sound_info[0] = self.decrypt_url(encrypted_url["url"])
             elif encrypted_url["type"] == "MP3_64":
                 sound_info[1] = self.decrypt_url(encrypted_url["url"])
             elif encrypted_url["type"] == "MP3_32":
