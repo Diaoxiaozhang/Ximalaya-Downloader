@@ -58,7 +58,7 @@ class Ximalaya:
         try:
             not response.json()["trackInfo"]["isAuthorized"]
         except KeyError:
-            print('解析失败，可能达到每日下载上限')
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败，可能因为达到每日付费音频下载上限！')
             return False
         if not response.json()["trackInfo"]["isAuthorized"]:
             return 0  # 未购买或未登录vip账号
@@ -130,6 +130,9 @@ class Ximalaya:
                 response_json = json.loads(await response.text())
                 sound_name = response_json["trackInfo"]["title"]
                 encrypted_url_list = response_json["trackInfo"]["playUrlList"]
+        except KeyError:
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败，可能因为达到每日付费音频下载上限')
+            return False
         except Exception as e:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
             logger.debug(f'ID为{sound_id}的声音解析失败！')
