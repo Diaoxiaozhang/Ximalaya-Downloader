@@ -88,6 +88,7 @@ class Ximalaya:
         params = {
             "albumId": album_id,
             "pageNum": 1,
+            "sort": 0,
             "pageSize": 100
         }
         try:
