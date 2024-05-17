@@ -31,7 +31,7 @@ if __name__ == "__main__":
         print("检测到当前ip不在中国大陆，由于喜马拉雅官方限制，必须登录才能继续使用，将自动跳转到登录流程")
         ximalaya.login()
         headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+            "user-agent": ua.random,
             "cookie": ximalaya.analyze_config()[0]
         }
         logined = True
@@ -44,7 +44,7 @@ if __name__ == "__main__":
             if choice == "1":
                 ximalaya.login()
                 headers = {
-                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+                    "user-agent": ua.random,
                     "cookie": ximalaya.analyze_config()[0]
                 }
                 logined = True

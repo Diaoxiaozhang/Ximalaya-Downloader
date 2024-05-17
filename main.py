@@ -1,19 +1,16 @@
 # -*- coding:utf-8 -*-
 import asyncio
-import base64
-import binascii
 import json
 import math
 import os
-import re
 import time
 import logging
 import traceback
+from fake_useragent import UserAgent
 
 import aiofiles
 import aiohttp
 import requests
-from Crypto.Cipher import AES
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium import webdriver
@@ -32,12 +29,13 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 path = ""
+ua = UserAgent()
 
 
 class Ximalaya:
     def __init__(self):
         self.default_headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14"
+            "user-agent": ua.random
         }
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
@@ -339,7 +337,7 @@ class Ximalaya:
     def judge_cookie(self, cookie):
         url = "https://www.ximalaya.com/revision/my/getCurrentUserInfo"
         headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+            "user-agent": ua.random,
             "cookie": cookie
         }
         try:
