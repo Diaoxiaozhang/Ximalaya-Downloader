@@ -5,14 +5,14 @@ import requests
 import os
 import time
 import argparse
-
+from fake_useragent import UserAgent
 
 ximalaya = main.Ximalaya()
 loop = asyncio.get_event_loop()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sound', type=int, help='')
-
+ua = UserAgent()
 
 if __name__ == "__main__":
     print("欢迎使用喜马拉雅下载器")
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     else:
         print(f"已检测到有效登录信息，当前登录用户为{username}，如需切换账号请删除config.json文件然后重新启动本程序！")
         headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36 Edg/111.0.1660.14",
+            "user-agent": ua.random,
             "cookie": ximalaya.analyze_config()[0]
         }
         logined = True

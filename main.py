@@ -21,6 +21,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import selenium.common.exceptions
 import colorama
+import execjs
 
 colorama.init(autoreset=True)
 logger = logging.getLogger('logger')
@@ -274,12 +275,15 @@ class Ximalaya:
 
     # 解密vip声音url
     def decrypt_url(self, ciphertext):
-        key = binascii.unhexlify("aaad3e4fd540b0f79dca95606e72bf93")
-        ciphertext = base64.urlsafe_b64decode(ciphertext + '=' * (4 - len(ciphertext) % 4))
-        cipher = AES.new(key, AES.MODE_ECB)
-        plaintext = cipher.decrypt(ciphertext)
-        plaintext = re.sub(r"[^\x20-\x7E]", "", plaintext.decode("utf-8"))
-        return plaintext
+        # 读取 JavaScript 文件内容
+        with open('./decrypt.js', 'r') as file:
+            decrypt_js_code = file.read()
+        context = execjs.compile(decrypt_js_code)
+        result = context.call("getSoundCryptLink", {
+            "deviceType": "www2",
+            "link": ciphertext
+        })
+        return result
 
     # 判断专辑是否为付费专辑，如果是免费专辑返回0，如果是已购买的付费专辑返回1，如果是未购买的付费专辑返回2，如果解析失败返回False
     def judge_album(self, album_id, headers):
