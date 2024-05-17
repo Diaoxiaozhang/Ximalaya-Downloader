@@ -45,7 +45,7 @@ class Ximalaya:
         logger.debug(f'开始解析ID为{sound_id}的声音')
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
-            "device": "web",
+            "device": "www2",
             "trackId": sound_id,
             "trackQualityLevel": 2
         }
@@ -123,7 +123,7 @@ class Ximalaya:
     async def async_analyze_sound(self, sound_id, session, headers):
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
-            "device": "web",
+            "device": "www2",
             "trackId": sound_id,
             "trackQualityLevel": 2
         }
