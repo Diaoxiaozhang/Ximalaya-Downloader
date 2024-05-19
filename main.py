@@ -19,7 +19,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import selenium.common.exceptions
 import colorama
-import execjs
 
 colorama.init(autoreset=True)
 logger = logging.getLogger('logger')
