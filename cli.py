@@ -6,13 +6,22 @@ import os
 import time
 import argparse
 from fake_useragent import UserAgent
+import tkinter as tk
+from tkinter import filedialog
+import json
 
 ximalaya = main.Ximalaya()
 loop = asyncio.get_event_loop()
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--sound', type=int, help='')
 ua = UserAgent()
+
+def select_directory():
+    root = tk.Tk()
+    root.withdraw()
+    directory_path = filedialog.askdirectory()
+    root.destroy()
+    return directory_path
 
 if __name__ == "__main__":
     print("欢迎使用喜马拉雅下载器")
@@ -22,9 +31,9 @@ if __name__ == "__main__":
     else:
         username = ximalaya.judge_cookie(cookie)
     if os.path.isdir(path):
-        print(f"检测到已设置下载路径为{path}，如果想要修改下载路径，请修改config.json文件中的path字段，将path字段删除或者将值设置为空字符串可恢复默认下载路径")
+        print(f"检测到已设置下载路径为{path}")
     else:
-        print('在config文件中未检测到有效的下载路径，将使用默认下载路径，如果想要修改下载路径，请修改config.json文件中的path字段为你想要的下载路径')
+        print('在config文件中未检测到有效的下载路径，将使用默认下载路径./download')
         path = './download'
     response = requests.get(f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}?device=web&trackId=188017958&trackQualityLevel=1",headers=ximalaya.default_headers)
     if response.json()["ret"] == 927 and not username:
@@ -66,7 +75,8 @@ if __name__ == "__main__":
         print("请选择要使用的功能：")
         print("1. 下载单个声音")
         print("2. 下载专辑声音")
-        print("3. 退出程序")
+        print("3. 修改下载路径")
+        print("4. 退出程序")
         choice = input()
         if choice == "1":
             print("请输入声音ID或链接：")
@@ -191,6 +201,19 @@ if __name__ == "__main__":
                 else:
                     print("无效的选择，请重新输入。")
         elif choice == "3":
+            print("请在弹出的窗口中选择下载路径。")
+            path_ = select_directory()
+            if path_ == "":
+                print("检测到目录选择窗口被关闭，将继续使用原有下载路径。")
+            else:
+                path = path_
+                with open("config.json", "r") as f:
+                    config = json.load(f)
+                config["path"] = path
+                with open("config.json", "w") as f:
+                    json.dump(config, f)
+                print(f"成功修改下载路径为{path}")
+        elif choice == "4":
             break
         else:
             print("无效的选择，请重新输入。")
