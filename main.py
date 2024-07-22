@@ -47,6 +47,7 @@ class Ximalaya:
             "trackId": sound_id,
             "trackQualityLevel": 2
         }
+        headers["referer"] = f"https://www.ximalaya.com/sound/{sound_id}"
         try:
             response = requests.get(url, headers=headers, params=params, timeout=15)
         except Exception as e:
@@ -126,6 +127,7 @@ class Ximalaya:
             "trackId": sound_id,
             "trackQualityLevel": 2
         }
+        headers["referer"] = f"https://www.ximalaya.com/sound/{sound_id}"
         while retries > 0:
             try:
                 async with session.get(url, headers=headers, params=params, timeout=20) as response:
