@@ -17,6 +17,7 @@ from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 import selenium.common.exceptions
 import colorama
 
@@ -395,6 +396,8 @@ class Ximalaya:
             driver.get("https://passport.ximalaya.com/page/web/login")
             try:
                 WebDriverWait(driver, 300).until(EC.url_to_be("https://www.ximalaya.com/"))
+                driver.get("https://www.ximalaya.com/sound/62919401")
+                WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, '//*[@id="jymain"]/div[1]/div[2]/div[1]/div[1]/div/div[2]/div/h1')))
                 cookies = driver.get_cookies()
                 logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
                 for entry in driver.get_log('browser'):
