@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import filedialog
 import json
 
+current_version = main.version
 ximalaya = main.Ximalaya()
 loop = asyncio.get_event_loop()
 parser = argparse.ArgumentParser()
@@ -23,8 +24,21 @@ def select_directory():
     root.destroy()
     return directory_path
 
+def get_latest_release():
+    url = "https://api.github.com/repos/Diaoxiaozhang/Ximalaya-Downloader/releases/latest"
+    response = requests.get(url)
+    version = response.json()["tag_name"]
+    release_url = response.json()["html_url"]
+    return version, release_url
+
 if __name__ == "__main__":
     print("欢迎使用喜马拉雅下载器")
+    latest_version, latest_release_url = get_latest_release()
+    if latest_version == current_version:
+        print("当前您使用的已是最新版本，如果遇到任何问题，请前往github提交issue")
+    else:
+        print("您当前使用的并非最新版本，强烈建议前往github下载最新版本")
+        print(f"下载链接：{latest_release_url}")
     cookie, path = ximalaya.analyze_config()
     if not cookie:
         username = False
@@ -35,35 +49,14 @@ if __name__ == "__main__":
     else:
         print('在config文件中未检测到有效的下载路径，将使用默认下载路径./download')
         path = './download'
-    response = requests.get(f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}?device=web&trackId=188017958&trackQualityLevel=1",headers=ximalaya.default_headers)
-    if response.json()["ret"] == 927 and not username:
-        print("检测到当前ip不在中国大陆，由于喜马拉雅官方限制，必须登录才能继续使用，将自动跳转到登录流程")
+    if not username:
+        print("未检测到有效喜马拉雅登录信息，请登录后再使用")
         ximalaya.login()
         headers = {
             "user-agent": ua.random,
             "cookie": ximalaya.analyze_config()[0]
         }
         logined = True
-    elif not username:
-        while True:
-            print("未检测到有效喜马拉雅登录信息，请选择是否要登录：")
-            print("1. 登录")
-            print("2. 不登录")
-            choice = input()
-            if choice == "1":
-                ximalaya.login()
-                headers = {
-                    "user-agent": ua.random,
-                    "cookie": ximalaya.analyze_config()[0]
-                }
-                logined = True
-                break
-            elif choice == "2":
-                headers = ximalaya.default_headers
-                logined = False
-                break
-            else:
-                print("输入有误，请重新输入！")
     else:
         print(f"已检测到有效登录信息，当前登录用户为{username}，如需切换账号请删除config.json文件然后重新启动本程序！")
         headers = {

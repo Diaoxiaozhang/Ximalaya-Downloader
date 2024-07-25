@@ -21,6 +21,7 @@ from selenium.webdriver.common.by import By
 import selenium.common.exceptions
 import colorama
 
+version = "v0.4.2"
 colorama.init(autoreset=True)
 logger = logging.getLogger('logger')
 logger.setLevel(logging.DEBUG)
@@ -71,16 +72,22 @@ class Ximalaya:
             logger.debug(f'ID为{sound_id}的声音解析失败！')
             logger.debug(traceback.format_exc())
             return False
-        sound_info = {"name": sound_name, 0: "", 1: "", 2: ""}
-        for encrypted_url in encrypted_url_list:
-            if encrypted_url["type"] == "M4A_128":
-                sound_info[2] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "MP3_64":
-                sound_info[1] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "MP3_32":
-                sound_info[0] = self.decrypt_url(encrypted_url["url"])
-        logger.debug(f'ID为{sound_id}的声音解析成功！')
-        return sound_info
+        if encrypted_url_list[0]["type"][:2] == "AI":
+            sound_info = {"name": sound_name, 0: "", 1: "", 2: ""}
+            sound_info[0] = sound_info[1] = self.decrypt_url(encrypted_url_list[0]["url"])
+            logger.debug(f'ID为{sound_id}的声音解析成功！')
+            return sound_info
+        else:
+            sound_info = {"name": sound_name, 0: "", 1: "", 2: ""}
+            for encrypted_url in encrypted_url_list:
+                if encrypted_url["type"] == "M4A_128":
+                    sound_info[2] = self.decrypt_url(encrypted_url["url"])
+                elif encrypted_url["type"] == "MP3_64":
+                    sound_info[1] = self.decrypt_url(encrypted_url["url"])
+                elif encrypted_url["type"] == "MP3_32":
+                    sound_info[0] = self.decrypt_url(encrypted_url["url"])
+            logger.debug(f'ID为{sound_id}的声音解析成功！')
+            return sound_info
 
     # 解析专辑，如果成功返回专辑名和专辑声音列表，否则返回False
     def analyze_album(self, album_id):
@@ -148,20 +155,22 @@ class Ximalaya:
             retries -= 1
         if not response_json["trackInfo"]["isAuthorized"]:
             return 0  # 未购买或未登录vip账号
-        sound_info = {"name": sound_name, 0: "", 1: "", 2: ""}
-        for encrypted_url in encrypted_url_list:
-            if encrypted_url["type"] == "M4A_128":
-                sound_info[2] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "M4A_64":
-                sound_info[1] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "M4A_24":
-                sound_info[0] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "MP3_64":
-                sound_info[1] = self.decrypt_url(encrypted_url["url"])
-            elif encrypted_url["type"] == "MP3_32":
-                sound_info[0] = self.decrypt_url(encrypted_url["url"])
-        logger.debug(f'ID为{sound_id}的声音解析成功！')
-        return sound_info
+        if encrypted_url_list[0]["type"][:2] == "AI":
+            sound_info = {"name": sound_name, 0: "", 1: "", 2: ""}
+            sound_info[0] = sound_info[1] = self.decrypt_url(encrypted_url_list[0]["url"])
+            logger.debug(f'ID为{sound_id}的声音解析成功！')
+            return sound_info
+        else:
+            sound_info = {"name": sound_name, 0: "", 1: "", 2: ""}
+            for encrypted_url in encrypted_url_list:
+                if encrypted_url["type"] == "M4A_128":
+                    sound_info[2] = self.decrypt_url(encrypted_url["url"])
+                elif encrypted_url["type"] == "MP3_64":
+                    sound_info[1] = self.decrypt_url(encrypted_url["url"])
+                elif encrypted_url["type"] == "MP3_32":
+                    sound_info[0] = self.decrypt_url(encrypted_url["url"])
+            logger.debug(f'ID为{sound_id}的声音解析成功！')
+            return sound_info
 
     # 将文件名中不能包含的字符替换为空格
     def replace_invalid_chars(self, name):
