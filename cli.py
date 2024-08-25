@@ -24,21 +24,8 @@ def select_directory():
     root.destroy()
     return directory_path
 
-def get_latest_release():
-    url = "https://api.github.com/repos/Diaoxiaozhang/Ximalaya-Downloader/releases/latest"
-    response = requests.get(url)
-    version = response.json()["tag_name"]
-    release_url = response.json()["html_url"]
-    return version, release_url
-
 if __name__ == "__main__":
     print("欢迎使用喜马拉雅下载器")
-    latest_version, latest_release_url = get_latest_release()
-    if latest_version == current_version:
-        print("当前您使用的已是最新版本，如果遇到任何问题，请前往github提交issue")
-    else:
-        print("您当前使用的并非最新版本，强烈建议前往github下载最新版本")
-        print(f"下载链接：{latest_release_url}")
     cookie, path = ximalaya.analyze_config()
     if not cookie:
         username = False
