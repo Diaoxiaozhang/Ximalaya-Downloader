@@ -37,7 +37,7 @@ ua = UserAgent()
 class Ximalaya:
     def __init__(self):
         self.default_headers = {
-            "user-agent": ua.random
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0"
         }
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
@@ -99,28 +99,49 @@ class Ximalaya:
             "sort": 0,
             "pageSize": 100
         }
-        try:
-            response = requests.get(url, headers=self.default_headers, params=params, timeout=15)
-        except Exception as e:
-            print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
-            logger.debug(f'ID为{album_id}的专辑解析失败！')
-            logger.debug(traceback.format_exc())
-            return False, False
+        headers = self.default_headers
+        headers["referer"] = f"https://www.ximalaya.com/album/{album_id}"
+        while True:
+            retries = 5
+            try:
+                response = requests.get(url, headers=headers, params=params, timeout=15)
+            except Exception as e:
+                print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+                logger.debug(f'ID为{album_id}的专辑解析失败！')
+                logger.debug(traceback.format_exc())
+                return False, False
+            if response.json()["data"]["tracks"] == []:
+                retries -= 1
+            else:
+                break
+            if retries == 0:
+                print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+                logger.debug(f'ID为{album_id}的专辑解析失败！（getTracksList错误）')
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
         for page in range(1, pages + 1):
             params = {
                 "albumId": album_id,
                 "pageNum": page,
+                "sort": 0,
                 "pageSize": 100
             }
-            try:
-                response = requests.get(url, headers=self.default_headers, params=params, timeout=30)
-            except Exception as e:
-                print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
-                logger.debug(f'ID为{album_id}的专辑解析失败！')
-                logger.debug(traceback.format_exc())
-                return False, False
+            while True:
+                retries = 5
+                try:
+                    response = requests.get(url, headers=headers, params=params, timeout=30)
+                except Exception as e:
+                    print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+                    logger.debug(f'ID为{album_id}的专辑解析失败！')
+                    logger.debug(traceback.format_exc())
+                    return False, False
+                if response.json()["data"]["tracks"] == []:
+                    retries -= 1
+                else:
+                    break
+                if retries == 0:
+                    print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+                    logger.debug(f'ID为{album_id}的专辑解析失败！（getTracksList错误）')
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
         logger.debug(f'ID为{album_id}的专辑解析成功')
