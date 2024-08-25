@@ -21,7 +21,7 @@ from selenium.webdriver.common.by import By
 import selenium.common.exceptions
 import colorama
 
-version = "v0.4.2"
+version = "v0.4.3"
 colorama.init(autoreset=True)
 logger = logging.getLogger('logger')
 logger.setLevel(logging.DEBUG)
