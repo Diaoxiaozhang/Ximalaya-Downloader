@@ -90,7 +90,7 @@ class Ximalaya:
             return sound_info
 
     # 解析专辑，如果成功返回专辑名和专辑声音列表，否则返回False
-    def analyze_album(self, album_id):
+    def analyze_album(self, album_id, headers):
         logger.debug(f'开始解析ID为{album_id}的专辑')
         url = "https://www.ximalaya.com/revision/album/v1/getTracksList"
         params = {
@@ -99,10 +99,9 @@ class Ximalaya:
             "sort": 0,
             "pageSize": 100
         }
-        headers = self.default_headers
         headers["referer"] = f"https://www.ximalaya.com/album/{album_id}"
+        retries = 5
         while True:
-            retries = 5
             try:
                 response = requests.get(url, headers=headers, params=params, timeout=15)
             except Exception as e:
@@ -117,6 +116,7 @@ class Ximalaya:
             if retries == 0:
                 print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
                 logger.debug(f'ID为{album_id}的专辑解析失败！（getTracksList错误）')
+                return False, False
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
         for page in range(1, pages + 1):
@@ -126,8 +126,8 @@ class Ximalaya:
                 "sort": 0,
                 "pageSize": 100
             }
+            retries = 5
             while True:
-                retries = 5
                 try:
                     response = requests.get(url, headers=headers, params=params, timeout=30)
                 except Exception as e:
@@ -136,12 +136,15 @@ class Ximalaya:
                     logger.debug(traceback.format_exc())
                     return False, False
                 if response.json()["data"]["tracks"] == []:
+                    print(f"第{page}页解析失败第{6-retries}次，共{pages}页")
                     retries -= 1
                 else:
+                    print(f"第{page}页解析成功，共{pages}页")
                     break
                 if retries == 0:
                     print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
                     logger.debug(f'ID为{album_id}的专辑解析失败！（getTracksList错误）')
+                    return False, False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
         logger.debug(f'ID为{album_id}的专辑解析成功')

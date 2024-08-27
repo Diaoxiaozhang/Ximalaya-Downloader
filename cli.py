@@ -106,7 +106,7 @@ if __name__ == "__main__":
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
-            album_name, sounds = ximalaya.analyze_album(album_id)
+            album_name, sounds = ximalaya.analyze_album(album_id, headers)
             if not sounds:
                 continue
             album_type = ximalaya.judge_album(album_id, headers)
