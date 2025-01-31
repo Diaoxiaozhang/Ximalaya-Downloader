@@ -8,7 +8,7 @@ import logging
 import traceback
 from fake_useragent import UserAgent
 from base64 import b64decode
-
+import subprocess
 import aiofiles
 import aiohttp
 import requests
@@ -39,6 +39,10 @@ class Ximalaya:
         self.default_headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0"
         }
+    
+    def get_sid(self):
+        sid = json.loads(subprocess.check_output(f"node dws.js", shell=True).decode())["sid"]
+        return sid
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
     def analyze_sound(self, sound_id, headers):
@@ -50,6 +54,7 @@ class Ximalaya:
             "trackQualityLevel": 2
         }
         headers["referer"] = f"https://www.ximalaya.com/sound/{sound_id}"
+        headers["xm-sign"] = f"D2rnW5JiZ5Fp1LdJk9KRVos7nO2xu3Ii/anjFYmo5r89MXa0&&{self.get_sid()}"
         try:
             response = requests.get(url, headers=headers, params=params, timeout=15)
         except Exception as e:
@@ -160,6 +165,7 @@ class Ximalaya:
             "trackQualityLevel": 2
         }
         headers["referer"] = f"https://www.ximalaya.com/sound/{sound_id}"
+        headers["xm-sign"] = f"D2rnW5JiZ5Fp1LdJk9KRVos7nO2xu3Ii/anjFYmo5r89MXa0&&{self.get_sid()}"
         while retries > 0:
             try:
                 async with session.get(url, headers=headers, params=params, timeout=20) as response:
