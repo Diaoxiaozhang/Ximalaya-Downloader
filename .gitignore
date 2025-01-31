@@ -149,6 +149,7 @@ initialize.sh
 # vscode
 .vscode/
 
-.node_modules/
+node_modules/
+package.json
 package-lock.json
 tempCodeRunnerFile.js
