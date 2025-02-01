@@ -105,6 +105,7 @@ class Ximalaya:
             "pageSize": 100
         }
         headers["referer"] = f"https://www.ximalaya.com/album/{album_id}"
+        headers["xm-sign"] = f"D2rnW5JiZ5Fp1LdJk9KRVos7nO2xu3Ii/anjFYmo5r89MXa0&&{self.get_sid()}"
         retries = 5
         while True:
             try:
@@ -133,6 +134,18 @@ class Ximalaya:
             }
             retries = 5
             while True:
+                xm_retries = 3
+                while True:
+                    try:
+                        headers["xm-sign"] = f"D2rnW5JiZ5Fp1LdJk9KRVos7nO2xu3Ii/anjFYmo5r89MXa0&&{self.get_sid()}"
+                        break
+                    except Exception:
+                        xm_retries -= 1
+                    if xm_retries == 0:
+                        print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+                        logger.debug(f'ID为{album_id}的专辑解析失败！')
+                        logger.debug(traceback.format_exc())
+                        return False, False
                 try:
                     response = requests.get(url, headers=headers, params=params, timeout=30)
                 except Exception as e:
@@ -149,6 +162,7 @@ class Ximalaya:
                 if retries == 0:
                     print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
                     logger.debug(f'ID为{album_id}的专辑解析失败！（getTracksList错误）')
+                    logger.debug(traceback.format_exc())
                     return False, False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]

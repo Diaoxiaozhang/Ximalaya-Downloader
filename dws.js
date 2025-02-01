@@ -11718,8 +11718,7 @@ axios.post("https://hdaa.shuzilm.cn".concat(window.d.getUrlMethod(0)), window.d.
     t = response.data;
     n = ":rU36=@Z:rU36=@Z";
     console.log(window.d._parseServiceData(t, n));
-  });
-
-
-
-
+  })
+.catch(error => {
+  console.error('request failed:', error);
+});
