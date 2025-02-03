@@ -41,7 +41,7 @@ class Ximalaya:
         }
     
     def get_sid(self):
-        sid = json.loads(subprocess.check_output(f"node dws.js", shell=True).decode())["sid"]
+        sid = json.loads(subprocess.check_output(f"dws.exe", shell=True).decode())["sid"]
         return sid
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
