@@ -1,7 +1,6 @@
 import main
 import asyncio
 import re
-import requests
 import os
 import time
 import argparse
@@ -26,23 +25,30 @@ def select_directory():
 
 if __name__ == "__main__":
     print("欢迎使用喜马拉雅下载器")
-    cookie, path = ximalaya.analyze_config()
+    cookie, path, bid, login_time = ximalaya.analyze_config()
     if not cookie:
         username = False
     else:
         username = ximalaya.judge_cookie(cookie)
+    if not login_time:
+        available = False
+    elif int(time.time()) - int(login_time) < 86400:
+        available = True
+    else:
+        available = False
     if os.path.isdir(path):
         print(f"检测到已设置下载路径为{path}")
     else:
         print('在config文件中未检测到有效的下载路径，将使用默认下载路径./download')
         path = './download'
-    if not username:
-        print("未检测到有效喜马拉雅登录信息，请登录后再使用")
+    if not username or not available or not bid:
+        print("未检测到有效喜马拉雅登录信息或登录信息已过期，请登录后再使用")
         ximalaya.login()
         headers = {
             "user-agent": ua.random,
             "cookie": ximalaya.analyze_config()[0]
         }
+        bid = ximalaya.analyze_config()[2]
         logined = True
     else:
         print(f"已检测到有效登录信息，当前登录用户为{username}，如需切换账号请删除config.json文件然后重新启动本程序！")
@@ -50,6 +56,7 @@ if __name__ == "__main__":
             "user-agent": ua.random,
             "cookie": ximalaya.analyze_config()[0]
         }
+        bid = ximalaya.analyze_config()[2]
         logined = True
     while True:
         print("请选择要使用的功能：")
@@ -69,7 +76,7 @@ if __name__ == "__main__":
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
-            sound_info = ximalaya.analyze_sound(sound_id, headers)
+            sound_info = ximalaya.analyze_sound(sound_id, headers, bid)
             if sound_info is False:
                 continue
             if sound_info == 0 and logined:
@@ -106,7 +113,7 @@ if __name__ == "__main__":
                 except Exception:
                     print("输入有误，请重新输入！")
                     continue
-            album_name, sounds = ximalaya.analyze_album(album_id, headers)
+            album_name, sounds = ximalaya.analyze_album(album_id, headers, bid)
             if not sounds:
                 continue
             album_type = ximalaya.judge_album(album_id, headers)
@@ -170,7 +177,7 @@ if __name__ == "__main__":
                             if choice == "":
                                 choice = "1"
                             if choice == "0" or choice == "1" or choice == "2":
-                                loop.run_until_complete(ximalaya.get_selected_sounds(sounds, album_name, start, end, headers, int(choice), number, path))
+                                loop.run_until_complete(ximalaya.get_selected_sounds(sounds, album_name, start, end, headers, bid, int(choice), number, path))
                                 break
                             else:
                                 print("输入有误，请重新输入！")
