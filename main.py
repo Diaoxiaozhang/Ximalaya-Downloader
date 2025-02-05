@@ -455,6 +455,7 @@ class Ximalaya:
         print("1. Google Chrome")
         print("2. Microsoft Edge")
         choice = input()
+        print("请等待到浏览器窗口弹出后登录喜马拉雅账号，登录成功后浏览器会自动关闭")
         if choice == "1":
             option = webdriver.ChromeOptions()
             option.add_experimental_option("detach", True)
@@ -467,7 +468,6 @@ class Ximalaya:
             driver = webdriver.Edge(executable_path=EdgeChromiumDriverManager().install(), options=option)
         else:
             return
-        print("请在弹出的浏览器中登录喜马拉雅账号，登陆成功浏览器会自动关闭")
         driver.get("https://passport.ximalaya.com/page/web/login")
         try:
             WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/main/div[1]/div[2]/div/div[1]")))
