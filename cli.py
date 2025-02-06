@@ -4,6 +4,7 @@ import re
 import os
 import time
 import argparse
+import requests
 from fake_useragent import UserAgent
 import tkinter as tk
 from tkinter import filedialog
@@ -25,6 +26,13 @@ def select_directory():
 
 if __name__ == "__main__":
     print("欢迎使用喜马拉雅下载器")
+    print("本程序发布于github，完全开源免费，仓库地址：https://github.com/Diaoxiaozhang/Ximalaya-Downloader")
+    try:
+        newest_version = requests.get("https://api.github.com/repos/Diaoxiaozhang/Ximalaya-Downloader/releases").json()[0]['tag_name']
+        if newest_version != current_version:
+            print(f"检测到新版本{newest_version}，当前版本为{current_version}，强烈建议您前往github下载最新版本！")
+    except Exception:
+        print(f"自动检测新版本失败，当前版本为{current_version}，建议手动前往github检查是否有新版本！")
     cookie, path, bid, login_time = ximalaya.analyze_config()
     if not cookie:
         username = False
