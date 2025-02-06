@@ -474,19 +474,21 @@ class Ximalaya:
             option = webdriver.ChromeOptions()
             option.add_experimental_option("detach", True)
             option.add_experimental_option('excludeSwitches', ['enable-logging'])
+            option.page_load_strategy = 'eager'
             driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=option)
         elif choice == "2":
             option = webdriver.EdgeOptions()
             option.add_experimental_option("detach", True)
             option.add_experimental_option('excludeSwitches', ['enable-logging'])
+            option.page_load_strategy = 'eager'
             driver = webdriver.Edge(executable_path=EdgeChromiumDriverManager().install(), options=option)
         else:
             return
         driver.get("https://passport.ximalaya.com/page/web/login")
         try:
-            WebDriverWait(driver, 60).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/main/div[1]/div[2]/div/div[1]")))
+            WebDriverWait(driver, 120).until(EC.presence_of_element_located((By.ID, 'jymain')))
             driver.get("https://www.ximalaya.com/sound/62919401")
-            WebDriverWait(driver, 30).until(EC.visibility_of_element_located((By.XPATH, "/html/body/div[1]/main/div[1]/div[2]/div[1]/div[1]/div/div[2]/div/div[3]/div[1]/div")))
+            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, 'xm-player')))
             time.sleep(1)
             for request in driver.requests:
                 if request.url == "https://www.ximalaya.com/m-revision/page/track/queryRelativeTracksById?trackId=62919401&preOffset=9&nextOffset=0&countKeys=play&order=2":
