@@ -47,8 +47,16 @@ class Ximalaya:
         }
     
     def get_sid(self):
-        sid = json.loads(subprocess.check_output(dws_path, shell=True).decode())["sid"]
-        return sid
+        retries = 3
+        while retries > 0:
+            try:
+                sid = json.loads(subprocess.check_output(dws_path, shell=True).decode())["sid"]
+                return sid
+            except Exception as e:
+                logger.debug(f'获取sid失败！')
+                logger.debug(traceback.format_exc())
+                retries -= 1
+                return False
 
     # 解析声音，如果成功返回声音名和声音链接，否则返回False
     def analyze_sound(self, sound_id, headers, bid):
@@ -72,6 +80,8 @@ class Ximalaya:
             not response.json()["trackInfo"]["isAuthorized"]
         except KeyError:
             print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败，可能因为达到每日音频下载上限！')
+            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            logger.debug(traceback.format_exc())
             return False
         if not response.json()["trackInfo"]["isAuthorized"]:
             return 0  # 未购买或未登录vip账号
@@ -127,7 +137,7 @@ class Ximalaya:
                 break
             if retries == 0:
                 print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
-                logger.debug(f'ID为{album_id}的专辑解析失败！（getTracksList错误）')
+                logger.debug(f'ID为{album_id}的专辑解析失败！')
                 return False, False
         pages = math.ceil(response.json()["data"]["trackTotalCount"] / 100)
         sounds = []
@@ -140,18 +150,13 @@ class Ximalaya:
             }
             retries = 5
             while True:
-                xm_retries = 3
-                while True:
-                    try:
-                        headers["xm-sign"] = f"{bid}&&{self.get_sid()}"
-                        break
-                    except Exception:
-                        xm_retries -= 1
-                    if xm_retries == 0:
-                        print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
-                        logger.debug(f'ID为{album_id}的专辑解析失败！')
-                        logger.debug(traceback.format_exc())
-                        return False, False
+                sid = self.get_sid()
+                if not sid:
+                    print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
+                    logger.debug(f'ID为{album_id}的专辑解析失败！')
+                    return False, False
+                else:
+                    headers["xm-sign"] = f"{bid}&&{sid}"
                 try:
                     response = requests.get(url, headers=headers, params=params, timeout=30)
                 except Exception as e:
@@ -167,8 +172,7 @@ class Ximalaya:
                     break
                 if retries == 0:
                     print(colorama.Fore.RED + f'ID为{album_id}的专辑解析失败！')
-                    logger.debug(f'ID为{album_id}的专辑解析失败！（getTracksList错误）')
-                    logger.debug(traceback.format_exc())
+                    logger.debug(f'ID为{album_id}的专辑解析失败！')
                     return False, False
             sounds += response.json()["data"]["tracks"]
         album_name = sounds[0]["albumTitle"]
@@ -177,6 +181,7 @@ class Ximalaya:
 
     # 协程解析声音
     async def async_analyze_sound(self, sound_id, session, headers, bid):
+        logger.debug(f'开始解析ID为{sound_id}的声音')
         retries = 3
         url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
         params = {
@@ -185,7 +190,13 @@ class Ximalaya:
             "trackQualityLevel": 2
         }
         headers["referer"] = f"https://www.ximalaya.com/sound/{sound_id}"
-        headers["xm-sign"] = f"{bid}&&{self.get_sid()}"
+        sid = self.get_sid()
+        if not sid:
+            print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+            logger.debug(f'ID为{sound_id}的声音解析失败！')
+            return False
+        else:
+            headers["xm-sign"] = f"{bid}&&{sid}"
         while retries > 0:
             try:
                 async with session.get(url, headers=headers, params=params, timeout=20) as response:
@@ -195,14 +206,17 @@ class Ximalaya:
                     break
             except KeyError:
                 print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败，可能因为达到每日音频下载上限')
+                logger.debug(f'ID为{sound_id}的声音解析失败！')
+                logger.debug(traceback.format_exc())
                 return False
             except Exception as e:
                 logger.debug(f'ID为{sound_id}的声音解析失败！')
                 logger.debug(traceback.format_exc())
-                if retries == 0:
-                    print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
-                    return False
             retries -= 1
+            if retries == 0:
+                print(colorama.Fore.RED + f'ID为{sound_id}的声音解析失败！')
+                logger.debug(f'ID为{sound_id}的声音解析失败！')
+                return False
         if not response_json["trackInfo"]["isAuthorized"]:
             return 0  # 未购买或未登录vip账号
         if encrypted_url_list[0]["type"][:2] == "AI":
@@ -441,7 +455,7 @@ class Ximalaya:
         try:
             response = requests.get(url, headers=headers, timeout=15)
         except Exception as e:
-            print("无法获取喜马拉雅用户数据，请检查网络状况！")
+            print(colorama.Fore.RED + "无法获取喜马拉雅用户数据，请检查网络状况！")
             logger.debug("无法获取喜马拉雅用户数据！")
             logger.debug(traceback.format_exc())
         if response.json()["ret"] == 200:
@@ -495,7 +509,7 @@ class Ximalaya:
             logger.debug('浏览器日志结束')
             driver.quit()
         except selenium.common.exceptions.TimeoutException:
-            print("登录超时，自动返回主菜单！")
+            print(colorama.Fore.RED + "登录超时，自动返回主菜单！")
             logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
             for entry in driver.get_log('browser'):
                 logger.debug(entry['message'])
