@@ -409,10 +409,9 @@ class Ximalaya:
                     "cookie": "",
                     "path": "",
                     "bid": "",
-                    "login_time": ""
                 }
                 json.dump(config, f)
-            return False, False, False, False
+            return False, False, False
         try:
             cookie = config["cookie"]
         except Exception:
@@ -436,17 +435,10 @@ class Ximalaya:
             with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
             bid = False
-        try:
-            login_time = int(config["login_time"])
-        except Exception:
-            config["login_time"] = ""
-            with open("config.json", "w", encoding="utf-8") as f:
-                json.dump(config, f)
-            login_time = False
-        return cookie, path, bid, login_time
+        return cookie, path, bid
 
-    # 判断cookie是否有效
-    def judge_cookie(self, cookie):
+    # 判断登录信息是否有效
+    def judge_config(self, cookie, bid):
         url = "https://www.ximalaya.com/revision/my/getCurrentUserInfo"
         headers = {
             "user-agent": ua.random,
@@ -459,6 +451,17 @@ class Ximalaya:
             logger.debug("无法获取喜马拉雅用户数据！")
             logger.debug(traceback.format_exc())
         if response.json()["ret"] == 200:
+            url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time()*1000)}?device=www2&trackId=359357383&trackQualityLevel=1"
+            headers["xm-sign"] = f"{bid}&&{self.get_sid()}"
+            try:
+                requests.get(url, headers=headers, timeout=15).json()["trackInfo"]
+            except KeyError:
+                return False
+            except Exception:
+                print(colorama.Fore.RED + "无法获取喜马拉雅用户数据，请检查网络状况！")
+                logger.debug("无法获取喜马拉雅用户数据！")
+                logger.debug(traceback.format_exc())
+                return False
             return response.json()["data"]["userName"]
         else:
             return False
@@ -490,19 +493,29 @@ class Ximalaya:
             driver.get("https://www.ximalaya.com/sound/62919401")
             WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, 'xm-player')))
             time.sleep(1)
-            for request in driver.requests:
-                if request.url == "https://www.ximalaya.com/m-revision/page/track/queryRelativeTracksById?trackId=62919401&preOffset=9&nextOffset=0&countKeys=play&order=2":
-                    with open("config.json", "r", encoding="utf-8") as f:
-                        config = json.load(f)
-                    for key, value in request.headers.items():
-                        if key.lower() == "cookie":
-                            config["cookie"] = value
-                        if key.lower() == "xm-sign":
-                            pattern = r"^(.*?)&&"
-                            match = re.match(pattern, value)
-                            config["bid"] = match.group(1)
+            retries = 3
+            while retries > 0:
+                try:
+                    for request in driver.requests:
+                        if request.url == "https://www.ximalaya.com/m-revision/page/track/queryRelativeTracksById?trackId=62919401&preOffset=9&nextOffset=0&countKeys=play&order=2":
+                            with open("config.json", "r", encoding="utf-8") as f:
+                                config = json.load(f)
+                            for key, value in request.headers.items():
+                                if key.lower() == "cookie":
+                                    config["cookie"] = value
+                                if key.lower() == "xm-sign":
+                                    pattern = r"^(.*?)&&"
+                                    match = re.match(pattern, value)
+                                    config["bid"] = match.group(1)
+                            break
                     break
-            config["login_time"] = int(time.time())
+                except UnboundLocalError:
+                    retries -= 1
+                    if retries == 0:
+                        print(colorama.Fore.RED + "登录失败！")
+                        logger.debug("登录失败！")
+                        driver.quit()
+                        return False
             with open("config.json", "w", encoding="utf-8") as f:
                 json.dump(config, f)
             logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
@@ -518,5 +531,5 @@ class Ximalaya:
             logger.debug('浏览器日志结束')
             driver.quit()
             return False
-        username = self.judge_cookie(config["cookie"])
+        username = self.judge_config(config["cookie"], config["bid"])
         print(f"成功登录账号{username}！")

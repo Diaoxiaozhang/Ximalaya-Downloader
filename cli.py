@@ -35,23 +35,17 @@ if __name__ == "__main__":
             print(f"检测到新版本{newest_version}，当前版本为{current_version}，强烈建议您前往github下载最新版本！")
     except Exception:
         print(f"自动检测新版本失败，当前版本为{current_version}，建议手动前往github检查是否有新版本！")
-    cookie, path, bid, login_time = ximalaya.analyze_config()
-    if not cookie:
+    cookie, path, bid = ximalaya.analyze_config()
+    if not cookie or not bid:
         username = False
     else:
-        username = ximalaya.judge_cookie(cookie)
-    if not login_time:
-        available = False
-    elif int(time.time()) - int(login_time) < 86400:
-        available = True
-    else:
-        available = False
+        username = ximalaya.judge_config(cookie, bid)
     if os.path.isdir(path):
         print(f"检测到已设置下载路径为{path}")
     else:
         print('在config文件中未检测到有效的下载路径，将使用默认下载路径./download')
         path = './download'
-    if not username or not available or not bid:
+    if not username:
         print("未检测到有效喜马拉雅登录信息或登录信息已过期，请登录后再使用")
         ximalaya.login()
         headers = {
