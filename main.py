@@ -495,29 +495,30 @@ class Ximalaya:
             time.sleep(1)
             retries = 3
             while retries > 0:
+                for request in driver.requests:
+                    if request.url == "https://www.ximalaya.com/m-revision/page/track/queryRelativeTracksById?trackId=62919401&preOffset=9&nextOffset=0&countKeys=play&order=2":
+                        with open("config.json", "r", encoding="utf-8") as f:
+                            config = json.load(f)
+                        for key, value in request.headers.items():
+                            if key.lower() == "cookie":
+                                config["cookie"] = value
+                            if key.lower() == "xm-sign":
+                                pattern = r"^(.*?)&&"
+                                match = re.match(pattern, value)
+                                config["bid"] = match.group(1)
+                        break
                 try:
-                    for request in driver.requests:
-                        if request.url == "https://www.ximalaya.com/m-revision/page/track/queryRelativeTracksById?trackId=62919401&preOffset=9&nextOffset=0&countKeys=play&order=2":
-                            with open("config.json", "r", encoding="utf-8") as f:
-                                config = json.load(f)
-                            for key, value in request.headers.items():
-                                if key.lower() == "cookie":
-                                    config["cookie"] = value
-                                if key.lower() == "xm-sign":
-                                    pattern = r"^(.*?)&&"
-                                    match = re.match(pattern, value)
-                                    config["bid"] = match.group(1)
-                            break
+                    with open("config.json", "w", encoding="utf-8") as f:
+                        json.dump(config, f)
                     break
                 except UnboundLocalError:
                     retries -= 1
+                    time.sleep(1)
                     if retries == 0:
                         print(colorama.Fore.RED + "登录失败！")
                         logger.debug("登录失败！")
                         driver.quit()
                         return False
-            with open("config.json", "w", encoding="utf-8") as f:
-                json.dump(config, f)
             logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
             for entry in driver.get_log('browser'):
                 logger.debug(entry['message'])
