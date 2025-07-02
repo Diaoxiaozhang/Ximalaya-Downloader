@@ -495,8 +495,17 @@ class Ximalaya:
             time.sleep(1)
             retries = 3
             while retries > 0:
+                config = None# modify
                 for request in driver.requests:
                     if request.url == "https://www.ximalaya.com/m-revision/page/track/queryRelativeTracksById?trackId=62919401&preOffset=9&nextOffset=0&countKeys=play&order=2":
+                        # 如果文件不存在，创建默认配置 ##modify
+                        # 必须先有这个json结构，才能使用jsonload，不然会报错！
+                        # 不用加，analyze_config中有了
+                        # config_path = "config.json"
+                        # if not os.path.exists(config_path):
+                        #     default_config = {"cookie": "", "bid": ""}
+                        #     with open(config_path, "w", encoding="utf-8") as f:
+                        #         json.dump(default_config, f)
                         with open("config.json", "r", encoding="utf-8") as f:
                             config = json.load(f)
                         for key, value in request.headers.items():
@@ -507,18 +516,27 @@ class Ximalaya:
                                 match = re.match(pattern, value)
                                 config["bid"] = match.group(1)
                         break
-                try:
-                    with open("config.json", "w", encoding="utf-8") as f:
-                        json.dump(config, f)
-                    break
-                except UnboundLocalError:
+                if config is not None:# modify
+                    try:
+                        with open("config.json", "w", encoding="utf-8") as f:
+                            json.dump(config, f)
+                        break
+                    except Exception as e:
+                        print(f"保存配置时出错: {e}")
+                        retries -= 1
+                        time.sleep(1)
+
+                else:#modify
+                    print("未找到目标请求，等待重试...")
                     retries -= 1
                     time.sleep(1)
-                    if retries == 0:
-                        print(colorama.Fore.RED + "登录失败！")
-                        logger.debug("登录失败！")
-                        driver.quit()
-                        return False
+
+            if retries == 0:
+                print(colorama.Fore.RED + "登录失败！")
+                logger.debug("登录失败！")
+                driver.quit()
+                return False
+
             logger.debug('以下是使用浏览器登录喜马拉雅账号时的浏览器日志：')
             for entry in driver.get_log('browser'):
                 logger.debug(entry['message'])
