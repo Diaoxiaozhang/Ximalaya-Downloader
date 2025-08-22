@@ -50,11 +50,3 @@ PS：如果觉得这个项目不错，请一定为我点亮star，这对我很�
 2. 打开config.json，找到"path": ""，将右边的引号内改为你想要的下载路径
 3. 请使用/或\\\\而不是\\作为路径分隔符，例如"path": "D:/Downloads"
 4. 如果不设置下载路径，将默认下载到与软件同目录下的download文件夹
-
-### 请作者喝一杯可乐
-
-<p float="left">
-  <img src="https://s2.loli.net/2023/03/03/Grg85kWcdDzMLBH.jpg" width="35%" />
-  <img src="https://s2.loli.net/2023/03/03/E3zoxFskr8M7DKS.jpg" width="35%" />
-</p>
-
